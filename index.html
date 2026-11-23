@@ -1345,6 +1345,7 @@ let fitDB = {
   profile: null,
   mealSlots: [...DEFAULT_MEAL_SLOTS],
   foodsLibrary: { ...BASE_FOODS_CATALOG },
+  deletedFoods: [],
   customExercises: [...DEFAULT_EXERCISES],
   days: {}
 };
@@ -1458,6 +1459,7 @@ async function saveMetaDB() {
     profile: fitDB.profile,
     mealSlots: fitDB.mealSlots,
     foodsLibrary: fitDB.foodsLibrary,
+    deletedFoods: fitDB.deletedFoods || [],
     customExercises: fitDB.customExercises
   }));
   try {
@@ -1465,6 +1467,7 @@ async function saveMetaDB() {
       profile: fitDB.profile,
       mealSlots: fitDB.mealSlots,
       foodsLibrary: fitDB.foodsLibrary,
+      deletedFoods: fitDB.deletedFoods || [],
       customExercises: fitDB.customExercises
     }, { merge: true });
   } catch (e) { console.warn('Meta offline:', e); }
@@ -1501,13 +1504,23 @@ async function ensureMonthLoaded(monthPrefix) {
   } catch (e) {}
 }
 
+function pruneDeletedFoodsFromLibrary() {
+  (fitDB.deletedFoods || []).forEach(delKey => {
+    if (fitDB.foodsLibrary && fitDB.foodsLibrary[delKey]) {
+      delete fitDB.foodsLibrary[delKey];
+    }
+  });
+}
+
 async function loadMetaAndMonth(monthPrefix) {
   const cachedMeta = localStorage.getItem(`hiitfit_v4_meta_${currentUser.uid}`);
   if (cachedMeta) {
     const parsed = JSON.parse(cachedMeta);
     fitDB.profile = parsed.profile || fitDB.profile;
     fitDB.mealSlots = parsed.mealSlots && parsed.mealSlots.length ? parsed.mealSlots : [...DEFAULT_MEAL_SLOTS];
+    fitDB.deletedFoods = Array.isArray(parsed.deletedFoods) ? parsed.deletedFoods : [];
     fitDB.foodsLibrary = { ...BASE_FOODS_CATALOG, ...(parsed.foodsLibrary || {}) };
+    pruneDeletedFoodsFromLibrary();
     fitDB.customExercises = parsed.customExercises || fitDB.customExercises;
   }
 
@@ -1517,7 +1530,9 @@ async function loadMetaAndMonth(monthPrefix) {
       const data = userDoc.data();
       if (data.profile) fitDB.profile = data.profile;
       if (data.mealSlots && data.mealSlots.length) fitDB.mealSlots = data.mealSlots;
+      if (Array.isArray(data.deletedFoods)) fitDB.deletedFoods = data.deletedFoods;
       if (data.foodsLibrary) fitDB.foodsLibrary = { ...BASE_FOODS_CATALOG, ...data.foodsLibrary };
+      pruneDeletedFoodsFromLibrary();
       if (data.customExercises) fitDB.customExercises = data.customExercises;
       saveMetaDB();
     }
@@ -2292,7 +2307,14 @@ function convertCookedRaw() {
   else if (mode === '2') gramsInput.value = Math.round(current / 0.75);
 }
 
-function setFoodInputMode(isRecipeMode, recipeWeight = 0) {
+function isRecipeEntry(f, key = '') {
+  if (!f) return false;
+  const k = key || f.key || '';
+  const n = (f.name || '').trim();
+  return Boolean(f.isRecipe || String(k).startsWith('rec_') || n.startsWith('🍲'));
+}
+
+function setFoodInputMode(isRecipeMode, recipeWeight = 0, isLegacyRecipe = false) {
   selectedIsRecipe = isRecipeMode;
   selectedRecipeWeight = recipeWeight || 0;
 
@@ -2307,7 +2329,12 @@ function setFoodInputMode(isRecipeMode, recipeWeight = 0) {
     amtInput.step = '0.25';
     amtInput.placeholder = '1';
     convBtn.classList.add('hidden');
-    refLabel.innerText = `Macros totales por 1 porción (receta entera${recipeWeight > 0 ? ` · ${recipeWeight}g` : ''}):`;
+    if (isLegacyRecipe) {
+      refLabel.innerHTML = '<span style="color:var(--warning); font-weight:700;">⚠️ Receta de versión anterior (macros por 100g). Bórrala con 🗑️ en el buscador y créala de nuevo para guardar la porción entera.</span>';
+    } else {
+      refLabel.style.color = 'var(--text-muted)';
+      refLabel.innerText = `Macros totales por 1 porción (receta entera${recipeWeight > 0 ? ` · ${recipeWeight}g` : ''}):`;
+    }
     document.getElementById('lbl-ref-kcal').innerText = 'Kcal/porción';
     document.getElementById('lbl-ref-p').innerText = 'Prot/porción';
     document.getElementById('lbl-ref-c').innerText = 'Carb/porción';
@@ -2318,6 +2345,7 @@ function setFoodInputMode(isRecipeMode, recipeWeight = 0) {
     amtInput.step = '1';
     amtInput.placeholder = '100';
     convBtn.classList.remove('hidden');
+    refLabel.style.color = 'var(--text-muted)';
     refLabel.innerText = 'Macros por cada 100 g:';
     document.getElementById('lbl-ref-kcal').innerText = 'Kcal/100g';
     document.getElementById('lbl-ref-p').innerText = 'Prot/100g';
@@ -2327,9 +2355,35 @@ function setFoodInputMode(isRecipeMode, recipeWeight = 0) {
 }
 
 function onManualFoodNameInput() {
-  if (selectedIsRecipe) {
-    setFoodInputMode(false, 0);
+  const val = document.getElementById('food-name').value.trim();
+  const looksLikeRecipe = val.startsWith('🍲');
+  if (looksLikeRecipe && !selectedIsRecipe) {
+    setFoodInputMode(true, 0, false);
+  } else if (!looksLikeRecipe && selectedIsRecipe) {
+    setFoodInputMode(false, 0, false);
   }
+}
+
+async function deleteFoodFromLibrary(event, key) {
+  if (event) event.stopPropagation();
+  const item = fitDB.foodsLibrary[key];
+  if (!item) return;
+  if (!confirm(`¿Eliminar "${item.name}" de tu biblioteca guardada?`)) return;
+
+  delete fitDB.foodsLibrary[key];
+  if (!Array.isArray(fitDB.deletedFoods)) fitDB.deletedFoods = [];
+  if (!fitDB.deletedFoods.includes(key)) fitDB.deletedFoods.push(key);
+
+  await saveMetaDB();
+  if (currentUser) {
+    try {
+      await firestore.collection('fit_users').doc(currentUser.uid).update({
+        [`foodsLibrary.${key}`]: firebase.firestore.FieldValue.delete()
+      });
+    } catch (e) {}
+  }
+  filterLocalFoods();
+  showToast(`🗑️ "${item.name}" eliminado`);
 }
 
 function filterLocalFoods() {
@@ -2345,22 +2399,29 @@ function filterLocalFoods() {
     box.innerHTML = `<div class="search-item" onclick="searchOnlineFoods()" style="color:var(--info); font-weight:700;">🌐 No está en tu biblioteca. Pulsa aquí o en "Online" para buscar "${document.getElementById('food-search-query').value}"...</div>`;
   } else {
     box.innerHTML = matches.map(f => {
-      const isRec = Boolean(f.isRecipe);
-      const dispKcal = isRec ? f.totalKcal : f.kcal;
-      const dispP = isRec ? f.totalP : f.p;
-      const dispC = isRec ? f.totalC : f.c;
-      const dispG = isRec ? f.totalG : f.g;
-      const unitHint = isRec ? `1 porción (${f.totalWeight || '?'}g)` : '100g';
+      const isRec = isRecipeEntry(f, f.key);
+      const hasTotal = f.totalKcal !== undefined && f.totalKcal !== null;
+      const dispKcal = (isRec && hasTotal) ? f.totalKcal : (f.kcal || 0);
+      const dispP = (isRec && hasTotal) ? f.totalP : (f.p || 0);
+      const dispC = (isRec && hasTotal) ? f.totalC : (f.c || 0);
+      const dispG = (isRec && hasTotal) ? f.totalG : (f.g || 0);
+      const unitHint = isRec
+        ? (hasTotal ? `1 porción${f.totalWeight ? ` · ${f.totalWeight}g` : ''}` : 'receta antigua · 100g')
+        : '100g';
       const payload = JSON.stringify(f).replace(/'/g, "&apos;");
+      const safeKey = f.key.replace(/'/g, "\'");
       return `
         <div class="search-item" onclick='selectFoodObject(${payload})'>
-          <div style="min-width:0;">
+          <div style="min-width:0; flex:1;">
             <b>${f.name}</b>
             <div style="color:var(--text-muted); font-size:0.76rem;">
               ${dispKcal} kcal | P:${dispP}g C:${dispC}g G:${dispG}g (${unitHint})
             </div>
           </div>
-          <span class="src-tag src-local">${isRec ? '🍲 Receta' : '📁 Local'}</span>
+          <div style="display:flex; align-items:center; gap:0.35rem; flex-shrink:0;">
+            <span class="src-tag src-local">${isRec ? '🍲 Receta' : '📁 Local'}</span>
+            <button type="button" class="btn btn-danger btn-sm" style="padding:0.25rem 0.45rem; font-size:0.74rem;" onclick="deleteFoodFromLibrary(event, '${safeKey}')" title="Eliminar de tu biblioteca">🗑️</button>
+          </div>
         </div>
       `;
     }).join('');
@@ -2479,14 +2540,16 @@ async function searchOnlineFoods() {
 
 function selectFoodObject(f) {
   document.getElementById('food-name').value = f.name;
-  if (f.isRecipe) {
-    setFoodInputMode(true, f.totalWeight || 0);
-    document.getElementById('food-kcal100').value = f.totalKcal;
-    document.getElementById('food-p100').value = f.totalP;
-    document.getElementById('food-c100').value = f.totalC;
-    document.getElementById('food-g100').value = f.totalG;
+  const isRec = isRecipeEntry(f, f.key);
+  if (isRec) {
+    const hasTotal = f.totalKcal !== undefined && f.totalKcal !== null;
+    setFoodInputMode(true, f.totalWeight || 0, !hasTotal);
+    document.getElementById('food-kcal100').value = hasTotal ? f.totalKcal : (f.kcal || 0);
+    document.getElementById('food-p100').value = hasTotal ? f.totalP : (f.p || 0);
+    document.getElementById('food-c100').value = hasTotal ? f.totalC : (f.c || 0);
+    document.getElementById('food-g100').value = hasTotal ? f.totalG : (f.g || 0);
   } else {
-    setFoodInputMode(false, 0);
+    setFoodInputMode(false, 0, false);
     document.getElementById('food-kcal100').value = f.kcal;
     document.getElementById('food-p100').value = f.p;
     document.getElementById('food-c100').value = f.c;
@@ -2710,7 +2773,7 @@ function filterRecipeIngredients() {
 
   const matches = Object.keys(fitDB.foodsLibrary || {})
     .map(k => ({ key: k, ...fitDB.foodsLibrary[k] }))
-    .filter(f => !f.isRecipe && f.name.toLowerCase().includes(q));
+    .filter(f => !isRecipeEntry(f, f.key) && f.name.toLowerCase().includes(q));
 
   if (matches.length === 0) {
     box.innerHTML = `<div class="search-item" style="color:var(--text-muted);">No encontrado en biblioteca. Guárdalo primero desde "Añadir Alimento" con 💾 Guardar.</div>`;
