@@ -411,15 +411,25 @@
 
   .search-dropdown {
     background: var(--card-bg); border: 1px solid var(--primary);
-    border-radius: 12px; max-height: 220px; overflow-y: auto;
+    border-radius: 12px; max-height: 240px; overflow-y: auto;
     margin-bottom: 0.65rem; box-shadow: 0 12px 28px rgba(0,0,0,0.16);
   }
   .search-item {
     padding: 0.62rem 0.82rem; border-bottom: 1px solid var(--border);
     cursor: pointer; font-size: 0.86rem;
+    display: flex; justify-content: space-between; align-items: center; gap: 0.4rem;
   }
   .search-item:hover { background: var(--card-hover); }
   .search-item:last-child { border-bottom: none; }
+
+  .src-tag {
+    font-size: 0.68rem; font-weight: 800; padding: 0.15rem 0.42rem;
+    border-radius: 6px; white-space: nowrap; flex-shrink: 0;
+  }
+  .src-local { background: var(--primary-soft); color: var(--primary); }
+  .src-usda  { background: rgba(37, 99, 235, 0.14); color: var(--info); }
+  .src-off   { background: rgba(245, 158, 11, 0.18); color: #b45309; }
+  html.dark .src-off { color: #fbbf24; }
 
   .session-accordion-header {
     display: flex; justify-content: space-between; align-items: center;
@@ -635,7 +645,7 @@
     <!-- ==================== 1. PANTALLA PRINCIPAL (HOME) ==================== -->
     <div id="subview-home">
 
-      <!-- BALANCE NUTRICIONAL VISUAL (ARRIBA EN HOME CON GASTO DEL RELOJ INTEGRADO) -->
+      <!-- BALANCE NUTRICIONAL VISUAL -->
       <div class="card card-hero">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem; flex-wrap:wrap; gap:0.35rem;">
           <h3 style="font-size:1.05rem;">🥗 Balance Nutricional de Hoy</h3>
@@ -873,7 +883,7 @@
       </div>
     </div>
 
-    <!-- ==================== 3. VISTA NUTRICIÓN (EN VERDE HIITFIT + TOMAS EDITABLES) ==================== -->
+    <!-- ==================== 3. VISTA NUTRICIÓN ==================== -->
     <div id="subview-nutricion" class="hidden">
 
       <div id="nutri-double-session-alert" class="alert-banner hidden">
@@ -897,7 +907,7 @@
       <!-- BUSCADOR, ESCÁNER, FOTO TABLA NUTRICIONAL Y RECETAS -->
       <div class="card" id="food-adder-card">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.65rem;">
-          <h3 style="font-size:1rem;">🔍 Añadir Alimento</h3>
+          <h3 style="font-size:1rem;">🔍 Añadir Alimento o Receta</h3>
           <div style="display:flex; gap:0.32rem; flex-wrap:wrap;">
             <button class="btn btn-sm" onclick="document.getElementById('ocr-label-input').click()" title="Hacer foto a la tabla nutricional del envase">📷 Foto Tabla</button>
             <button class="btn btn-info btn-sm" onclick="toggleBarcodeScanner()"><i class="fa-solid fa-barcode"></i> Código</button>
@@ -915,8 +925,8 @@
         </div>
 
         <div style="display:flex; gap:0.38rem; align-items:center;">
-          <input type="text" id="food-search-query" placeholder="Buscar en biblioteca o en Open Food Facts..." style="margin:0;" oninput="filterLocalFoods()" onkeydown="if(event.key==='Enter') searchOpenFoodFactsText()">
-          <button class="btn btn-info btn-sm" style="height:40px; margin:0; white-space:nowrap;" onclick="searchOpenFoodFactsText()">🌐 Online</button>
+          <input type="text" id="food-search-query" placeholder="Buscar en tu biblioteca o pulsa Online (USDA + OpenFoodFacts)..." style="margin:0;" oninput="filterLocalFoods()" onkeydown="if(event.key==='Enter') searchOnlineFoods()">
+          <button class="btn btn-info btn-sm" style="height:40px; margin:0; white-space:nowrap;" onclick="searchOnlineFoods()">🌐 Online</button>
         </div>
 
         <div id="food-search-results" class="search-dropdown hidden" style="margin-top:0.38rem;"></div>
@@ -927,24 +937,24 @@
             <select id="food-meal-slot"></select>
           </div>
           <div>
-            <label style="font-size:0.78rem;"><b>Alimento:</b></label>
-            <input type="text" id="food-name" placeholder="Nombre">
+            <label style="font-size:0.78rem;"><b>Alimento / Receta:</b></label>
+            <input type="text" id="food-name" placeholder="Nombre" oninput="onManualFoodNameInput()">
           </div>
           <div>
-            <label style="font-size:0.78rem;"><b>Gramos (g):</b></label>
+            <label style="font-size:0.78rem;" id="food-amount-label"><b>Gramos (g):</b></label>
             <div style="display:flex; gap:0.25rem;">
-              <input type="number" id="food-grams" value="100" style="margin-bottom:0;">
-              <button class="btn btn-secondary btn-sm" style="padding:0 0.42rem;" onclick="convertCookedRaw()" title="Convertir cocinado a crudo">⚖️</button>
+              <input type="number" step="any" id="food-grams" value="100" style="margin-bottom:0;">
+              <button type="button" id="btn-cooked-raw" class="btn btn-secondary btn-sm" style="padding:0 0.42rem;" onclick="convertCookedRaw()" title="Convertir cocinado a crudo">⚖️</button>
             </div>
           </div>
         </div>
 
-        <p style="font-size:0.76rem; color:var(--text-muted); margin:0 0 0.25rem 0;">Macros por cada 100 g:</p>
+        <p id="food-macros-ref-label" style="font-size:0.76rem; color:var(--text-muted); margin:0 0 0.25rem 0;">Macros por cada 100 g:</p>
         <div class="grid-4">
-          <div><label style="font-size:0.74rem;">Kcal/100g</label><input type="number" step="0.1" id="food-kcal100" placeholder="0"></div>
-          <div><label style="font-size:0.74rem;">Prot/100g</label><input type="number" step="0.1" id="food-p100" placeholder="0"></div>
-          <div><label style="font-size:0.74rem;">Carb/100g</label><input type="number" step="0.1" id="food-c100" placeholder="0"></div>
-          <div><label style="font-size:0.74rem;">Grasa/100g</label><input type="number" step="0.1" id="food-g100" placeholder="0"></div>
+          <div><label style="font-size:0.74rem;" id="lbl-ref-kcal">Kcal/100g</label><input type="number" step="0.1" id="food-kcal100" placeholder="0"></div>
+          <div><label style="font-size:0.74rem;" id="lbl-ref-p">Prot/100g</label><input type="number" step="0.1" id="food-p100" placeholder="0"></div>
+          <div><label style="font-size:0.74rem;" id="lbl-ref-c">Carb/100g</label><input type="number" step="0.1" id="food-c100" placeholder="0"></div>
+          <div><label style="font-size:0.74rem;" id="lbl-ref-g">Grasa/100g</label><input type="number" step="0.1" id="food-g100" placeholder="0"></div>
         </div>
 
         <div style="display:flex; gap:0.45rem; flex-wrap:wrap;">
@@ -953,35 +963,39 @@
         </div>
       </div>
 
-      <!-- CREADOR DE RECETAS MEJORADO -->
+      <!-- CREADOR DE RECETAS (1º ALIMENTO -> 2º GRAMOS OBLIGATORIOS -> SUMA AUTOMÁTICA) -->
       <div id="recipe-creator-card" class="card hidden" style="border:2px solid var(--warning);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem;">
           <h3>🍲 Crear Receta Compuesta</h3>
           <button class="btn btn-secondary btn-sm" onclick="toggleRecipeModal()">✕</button>
         </div>
+
         <label style="font-size:0.82rem;"><b>Nombre de la Receta:</b></label>
         <input type="text" id="rec-name" placeholder="Ej: Tupper Arroz con Pollo">
 
-        <label style="font-size:0.8rem;"><b>Buscar ingrediente en biblioteca:</b></label>
-        <div style="display:flex; gap:0.38rem; align-items:center;">
-          <input type="text" id="rec-ing-search" placeholder="Escribe pollo, arroz, avena..." style="margin:0; flex:2;" oninput="filterRecipeIngredients()">
-          <input type="number" id="rec-ing-grams" value="100" placeholder="g" style="margin:0; width:78px; text-align:center;">
-          <button class="btn btn-sm" style="height:40px; margin:0;" onclick="addSelectedIngredientToRecipe()">+</button>
+        <label style="font-size:0.8rem;"><b>1. Selecciona el alimento (de tu biblioteca):</b></label>
+        <input type="text" id="rec-ing-search" placeholder="Escribe pollo, arroz, avena, huevo..." style="margin-bottom:0.35rem;" oninput="filterRecipeIngredients()">
+        <div id="rec-search-results" class="search-dropdown hidden" style="margin-top:0; margin-bottom:0.5rem;"></div>
+
+        <!-- PASO 2: OBLIGATORIO INTRODUCIR GRAMOS TRAS SELECCIONAR EL ALIMENTO -->
+        <div id="rec-step2-grams-box" class="hidden" style="background:var(--primary-soft); border:1px solid var(--primary); border-radius:12px; padding:0.65rem; margin-bottom:0.6rem;">
+          <label style="font-size:0.8rem; color:var(--primary);"><b>2. ¿Cuántos gramos lleva de <span id="rec-selected-food-label">este alimento</span>? (Obligatorio):</b></label>
+          <div style="display:flex; gap:0.4rem; align-items:center; margin-top:0.3rem;">
+            <input type="number" id="rec-ing-grams" placeholder="Ej: 200" min="0.1" step="any" style="margin:0; flex:1;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addSelectedIngredientToRecipe(); }">
+            <button type="button" class="btn btn-sm" style="height:40px; margin:0; white-space:nowrap;" onclick="addSelectedIngredientToRecipe()">➕ Añadir ingrediente</button>
+          </div>
         </div>
-        <div id="rec-search-results" class="search-dropdown hidden" style="margin-top:0.35rem;"></div>
 
         <div id="rec-ingredients-list" style="margin:0.65rem 0;"></div>
 
-        <div id="rec-totals-preview" style="background:var(--card-secondary); padding:0.65rem; border-radius:11px; font-size:0.8rem; margin-bottom:0.65rem; border:1px solid var(--border);">
-          Peso crudo ingredientes: <b>0 g</b> · Total: <b>0 kcal</b>
+        <div id="rec-totals-preview" style="background:var(--card-secondary); padding:0.7rem; border-radius:11px; font-size:0.82rem; margin-bottom:0.65rem; border:1px solid var(--border);">
+          Peso total sumado: <b>0 g</b> · Total receta (1 porción): <b>0 kcal</b>
         </div>
 
-        <label style="font-size:0.82rem;"><b>Peso total final cocinado (g):</b></label>
-        <input type="number" id="rec-final-weight" placeholder="Ej: 850 (calcula macros por 100g cocinados)">
-        <button class="btn btn-warning" onclick="saveRecipeToLibrary()">💾 Guardar Receta en Biblioteca</button>
+        <button class="btn btn-warning" onclick="saveRecipeToLibrary()">💾 Guardar Receta (1 Porción = Receta Entera)</button>
       </div>
 
-      <!-- TARJETAS INDEPENDIENTES POR TOMA (DESAYUNO, ALMUERZO, COMIDA, MERIENDA, CENA...) -->
+      <!-- TARJETAS INDEPENDIENTES POR TOMA -->
       <div id="meal-slots-container"></div>
     </div>
 
@@ -1129,7 +1143,7 @@
   </div>
 </div>
 
-<!-- MODAL EDITAR TOMAS DE COMIDA (DESAYUNO, ALMUERZO, PRE-ENTRENO...) -->
+<!-- MODAL EDITAR TOMAS DE COMIDA -->
 <div id="meal-slots-modal" class="modal-backdrop hidden">
   <div class="card" style="max-width:460px; width:100%; margin:0; max-height:88vh; overflow-y:auto;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
@@ -1209,36 +1223,101 @@ firestore.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 
 const DEFAULT_MEAL_SLOTS = ['Desayuno', 'Almuerzo', 'Comida', 'Merienda', 'Cena'];
 
+// Catálogo base ampliado de alimentos habituales en España (por 100g)
 const BASE_FOODS_CATALOG = {
   "pechuga_cruda": { name: "Pechuga de pollo (cruda)", kcal: 110, p: 23, c: 0, g: 1.8 },
+  "pechuga_plancha": { name: "Pechuga de pollo (cocinada / plancha)", kcal: 155, p: 31, c: 0, g: 3.2 },
+  "contramuslo_pollo": { name: "Contramuslo de pollo sin piel (crudo)", kcal: 125, p: 20, c: 0, g: 4.8 },
   "pechuga_pavo": { name: "Pechuga de pavo (cruda)", kcal: 107, p: 24, c: 0, g: 1.1 },
+  "fiambre_pavo": { name: "Fiambre pechuga de pavo 90%+", kcal: 92, p: 19, c: 1.2, g: 1.2 },
   "ternera_magra": { name: "Ternera magra / morcillo (cruda)", kcal: 135, p: 21, c: 0, g: 5.2 },
+  "carne_picada_vacuno": { name: "Carne picada de ternera magra", kcal: 165, p: 20.5, c: 0, g: 9.0 },
+  "lomo_cerdo": { name: "Cinta de lomo de cerdo fresca (cruda)", kcal: 145, p: 21.5, c: 0, g: 6.5 },
   "lomo_embuchado": { name: "Lomo embuchado", kcal: 215, p: 38, c: 1, g: 6.5 },
   "jamon_serrano": { name: "Jamón serrano", kcal: 241, p: 31, c: 0, g: 13 },
+  "jamon_cocido": { name: "Jamón cocido extra", kcal: 108, p: 19.5, c: 1.0, g: 2.8 },
   "huevo_l": { name: "Huevo entero", kcal: 143, p: 12.6, c: 0.7, g: 9.5 },
-  "claras_huevo": { name: "Claras de huevo líquidas", kcal: 48, p: 11, c: 0.7, g: 0.1 },
+  "claras_huevo": { name: "Claras de huevo líquidas (Mercadona/HSN)", kcal: 48, p: 11, c: 0.7, g: 0.1 },
   "salmon_fresco": { name: "Salmón fresco (crudo)", kcal: 208, p: 20, c: 0, g: 13 },
-  "merluza": { name: "Merluza / Pescado blanco", kcal: 82, p: 17, c: 0, g: 1.5 },
+  "salmon_ahumado": { name: "Salmón ahumado", kcal: 185, p: 22, c: 0.5, g: 10.5 },
+  "merluza": { name: "Merluza / Pescado blanco (crudo)", kcal: 82, p: 17, c: 0, g: 1.5 },
+  "bacalao_fresco": { name: "Bacalao fresco desalado", kcal: 78, p: 17.5, c: 0, g: 0.7 },
   "atun_natural": { name: "Atún claro al natural (escurrido)", kcal: 99, p: 23.5, c: 0, g: 0.6 },
-  "arroz_crudo": { name: "Arroz blanco/basmati (crudo)", kcal: 355, p: 7.5, c: 78, g: 0.9 },
+  "atun_aceite": { name: "Atún en aceite de oliva (escurrido)", kcal: 195, p: 25, c: 0, g: 10.5 },
+  "gambas_langostinos": { name: "Gambas / Langostinos pelados", kcal: 85, p: 18.5, c: 0.5, g: 0.9 },
+  "arroz_crudo": { name: "Arroz blanco / basmati (crudo)", kcal: 355, p: 7.5, c: 78, g: 0.9 },
+  "arroz_cocido": { name: "Arroz blanco (cocido)", kcal: 130, p: 2.7, c: 28, g: 0.3 },
   "pasta_cruda": { name: "Pasta de trigo (cruda)", kcal: 358, p: 12, c: 72, g: 1.5 },
+  "pasta_cocida": { name: "Pasta de trigo (cocida)", kcal: 145, p: 5.0, c: 29, g: 0.6 },
   "patata_cruda": { name: "Patata (cruda)", kcal: 77, p: 2, c: 17, g: 0.1 },
+  "patata_cocida": { name: "Patata cocida / asada", kcal: 86, p: 1.9, c: 19.5, g: 0.1 },
   "boniato_crudo": { name: "Boniato / Batata (crudo)", kcal: 86, p: 1.6, c: 20, g: 0.1 },
   "copos_avena": { name: "Copos de avena", kcal: 372, p: 13.5, c: 60, g: 7.0 },
   "crema_arroz": { name: "Crema de arroz HSN", kcal: 360, p: 7.5, c: 80, g: 0.8 },
   "pan_integral": { name: "Pan integral / barra", kcal: 245, p: 9, c: 46, g: 2.2 },
+  "pan_blanco": { name: "Pan blanco de barra", kcal: 265, p: 8.5, c: 53, g: 1.5 },
+  "pan_molde_integral": { name: "Pan de molde 100% integral", kcal: 242, p: 10.5, c: 41, g: 3.5 },
+  "tortitas_arroz": { name: "Tortitas de arroz inflado", kcal: 382, p: 8.0, c: 80, g: 2.8 },
+  "lentejas_cocidas": { name: "Lentejas cocidas (bote escurridas)", kcal: 105, p: 8.2, c: 15.5, g: 0.5 },
+  "garbanzos_cocidos": { name: "Garbanzos cocidos (bote escurridos)", kcal: 135, p: 7.5, c: 19.5, g: 2.4 },
   "leche_entera": { name: "Leche entera", kcal: 63, p: 3.1, c: 4.7, g: 3.5 },
   "leche_semi": { name: "Leche semidesnatada", kcal: 46, p: 3.2, c: 4.8, g: 1.6 },
   "leche_desnatada": { name: "Leche desnatada sin lactosa", kcal: 33, p: 3.2, c: 4.7, g: 0.1 },
   "yogur_griego": { name: "Yogur griego natural", kcal: 115, p: 4.2, c: 4.5, g: 9.0 },
+  "yogur_griego_ligero": { name: "Yogur griego ligero / 2% grasa", kcal: 62, p: 5.5, c: 4.5, g: 2.0 },
+  "yogur_proteinas": { name: "Yogur +Proteínas natural (Hacendado)", kcal: 54, p: 10.0, c: 3.2, g: 0.2 },
   "queso_fresco_batido": { name: "Queso fresco batido 0%", kcal: 46, p: 8.0, c: 3.5, g: 0.1 },
+  "queso_burgos_0": { name: "Queso fresco de Burgos 0%", kcal: 65, p: 11.5, c: 3.8, g: 0.2 },
+  "queso_cottage": { name: "Queso Cottage", kcal: 98, p: 12.5, c: 2.8, g: 4.0 },
+  "mozzarella_light": { name: "Queso Mozzarella Light", kcal: 165, p: 20.5, c: 1.5, g: 8.5 },
   "aceite_oliva": { name: "Aceite de oliva virgen extra", kcal: 884, p: 0, c: 0, g: 100 },
+  "mantequilla": { name: "Mantequilla tradicional", kcal: 717, p: 0.8, c: 0.6, g: 81 },
+  "aguacate": { name: "Aguacate fresco (pulpa)", kcal: 160, p: 2.0, c: 8.5, g: 14.7 },
   "nueces": { name: "Nueces peladas", kcal: 654, p: 15, c: 14, g: 65 },
+  "almendras": { name: "Almendras naturales / tostadas", kcal: 589, p: 21, c: 10, g: 51 },
   "crema_cacahuete": { name: "Crema de cacahuete 100%", kcal: 590, p: 26, c: 12, g: 49 },
+  "chocolate_85": { name: "Chocolate negro 85% cacao", kcal: 585, p: 11, c: 19, g: 49 },
+  "miel": { name: "Miel pura de abeja", kcal: 304, p: 0.3, c: 82, g: 0 },
   "platano": { name: "Plátano (pelado)", kcal: 89, p: 1.1, c: 23, g: 0.3 },
   "manzana": { name: "Manzana", kcal: 52, p: 0.3, c: 14, g: 0.2 },
-  "evowhey": { name: "Evowhey HSN", kcal: 385, p: 78, c: 6.5, g: 5.2 }
+  "naranja": { name: "Naranja (pelada)", kcal: 47, p: 0.9, c: 11.8, g: 0.1 },
+  "fresas": { name: "Fresas / Fresones", kcal: 33, p: 0.7, c: 7.7, g: 0.3 },
+  "arandanos": { name: "Arándanos frescos", kcal: 57, p: 0.7, c: 14.5, g: 0.3 },
+  "kiwi": { name: "Kiwi (pelado)", kcal: 61, p: 1.1, c: 14.7, g: 0.5 },
+  "brocoli": { name: "Brócoli", kcal: 34, p: 2.8, c: 6.6, g: 0.4 },
+  "espinacas": { name: "Espinacas frescas", kcal: 23, p: 2.9, c: 3.6, g: 0.4 },
+  "calabacin": { name: "Calabacín", kcal: 17, p: 1.2, c: 3.1, g: 0.3 },
+  "tomate_natural": { name: "Tomate natural / triturado", kcal: 21, p: 0.9, c: 4.2, g: 0.2 },
+  "cebolla": { name: "Cebolla", kcal: 40, p: 1.1, c: 9.3, g: 0.1 },
+  "zanahoria": { name: "Zanahoria", kcal: 41, p: 0.9, c: 9.6, g: 0.2 },
+  "evowhey": { name: "Evowhey HSN", kcal: 385, p: 78, c: 6.5, g: 5.2 },
+  "evobasic": { name: "Evobasic Whey HSN", kcal: 392, p: 75, c: 8.5, g: 6.0 }
 };
+
+// Diccionario ligero ES -> EN para consultas exactas en USDA FoodData Central
+const ES_TO_EN_FOOD_TERMS = {
+  "pollo": "chicken", "pechuga": "chicken breast", "pavo": "turkey", "ternera": "beef",
+  "cerdo": "pork", "lomo": "pork loin", "jamon": "ham", "huevo": "egg", "claras": "egg white",
+  "salmon": "salmon", "merluza": "hake", "bacalao": "cod", "atun": "tuna", "gambas": "shrimp",
+  "arroz": "rice", "pasta": "pasta", "macarrones": "macaroni", "espaguetis": "spaghetti",
+  "patata": "potato", "boniato": "sweet potato", "avena": "oats", "pan": "bread",
+  "lentejas": "lentils", "garbanzos": "chickpeas", "alubias": "beans",
+  "leche": "milk", "yogur": "yogurt", "queso": "cheese", "requeson": "cottage cheese",
+  "aceite": "olive oil", "mantequilla": "butter", "aguacate": "avocado",
+  "nueces": "walnuts", "almendras": "almonds", "cacahuete": "peanut", "pistachos": "pistachios",
+  "platano": "banana", "manzana": "apple", "naranja": "orange", "fresas": "strawberries",
+  "arandanos": "blueberries", "pina": "pineapple", "sandia": "watermelon", "melon": "melon",
+  "brocoli": "broccoli", "espinacas": "spinach", "calabacin": "zucchini", "tomate": "tomato",
+  "cebolla": "onion", "zanahoria": "carrot", "lechuga": "lettuce", "pepino": "cucumber",
+  "chocolate": "dark chocolate", "miel": "honey", "galletas": "cookies", "helado": "ice cream"
+};
+
+function translateQueryToEnglishForUSDA(rawQuery) {
+  const norm = rawQuery.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const words = norm.split(/\s+/);
+  const translated = words.map(w => ES_TO_EN_FOOD_TERMS[w] || w);
+  return translated.join(' ');
+}
 
 const DEFAULT_EXERCISES = [
   { es: "Press Banca", en: "Bench Press", muscle: "Pecho" },
@@ -1274,6 +1353,8 @@ let currentDaySessions = [];
 let pasteTargetSessionIdx = 0;
 let tempRecipeIngredients = [];
 let selectedRecipeFoodKey = null;
+let selectedIsRecipe = false;
+let selectedRecipeWeight = 0;
 let tempMealSlotsEdit = [];
 let html5QrCode = null;
 let restTimerInterval = null;
@@ -1983,7 +2064,7 @@ function renderHomeSummary() {
   document.getElementById('home-watch-note').innerText = getWatchSummaryLine(day);
   document.getElementById('home-macro-bars-container').innerHTML = buildMacroBarsHTML(totKcal, totP, totC, totG, targets);
 
-  document.getElementById('home-nutri-sub').innerText = `${entries.length} alimentos · ${Math.round(totKcal)} kcal`;
+  document.getElementById('home-nutri-sub').innerText = `${entries.length} registros · ${Math.round(totKcal)} kcal`;
 
   const allS = day.sessions || [];
   const plannedCount = allS.filter(s => s.status === 'planned').length;
@@ -2102,7 +2183,7 @@ async function saveReadinessAndCalories() {
   showToast('💾 Estado y balance calórico guardados');
 }
 
-// ==================== GESTOR DE TOMAS EDITABLES (DESAYUNO, ALMUERZO...) ====================
+// ==================== GESTOR DE TOMAS EDITABLES ====================
 function syncMealSlotsDropdown() {
   const slots = fitDB.mealSlots && fitDB.mealSlots.length ? fitDB.mealSlots : DEFAULT_MEAL_SLOTS;
   const sel = document.getElementById('food-meal-slot');
@@ -2182,6 +2263,7 @@ async function scanNutritionLabelPhoto(event) {
       return;
     }
 
+    setFoodInputMode(false);
     if (kcalVal !== null) document.getElementById('food-kcal100').value = Math.round(kcalVal);
     if (protVal !== null) document.getElementById('food-p100').value = protVal;
     if (carbVal !== null) document.getElementById('food-c100').value = carbVal;
@@ -2200,7 +2282,7 @@ async function scanNutritionLabelPhoto(event) {
   }
 }
 
-// ==================== NUTRICIÓN + API V2 OPEN FOOD FACTS + RECETAS ====================
+// ==================== NUTRICIÓN + BÚSQUEDA DUAL (USDA + OPEN FOOD FACTS ES) + RECETAS ====================
 function convertCookedRaw() {
   const gramsInput = document.getElementById('food-grams');
   const current = parseFloat(gramsInput.value) || 0;
@@ -2208,6 +2290,46 @@ function convertCookedRaw() {
   const mode = prompt('Conversor Rápido:\n1 = Pasar de COCINADO a CRUDO (arroz/pasta ÷ 2.5)\n2 = Pasar de COCINADO a CRUDO (carne/pollo ÷ 0.75)', '1');
   if (mode === '1') gramsInput.value = Math.round(current / 2.5);
   else if (mode === '2') gramsInput.value = Math.round(current / 0.75);
+}
+
+function setFoodInputMode(isRecipeMode, recipeWeight = 0) {
+  selectedIsRecipe = isRecipeMode;
+  selectedRecipeWeight = recipeWeight || 0;
+
+  const amtLabel = document.getElementById('food-amount-label');
+  const amtInput = document.getElementById('food-grams');
+  const convBtn = document.getElementById('btn-cooked-raw');
+  const refLabel = document.getElementById('food-macros-ref-label');
+
+  if (isRecipeMode) {
+    amtLabel.innerHTML = '<b>Porciones (1 = entera):</b>';
+    amtInput.value = 1;
+    amtInput.step = '0.25';
+    amtInput.placeholder = '1';
+    convBtn.classList.add('hidden');
+    refLabel.innerText = `Macros totales por 1 porción (receta entera${recipeWeight > 0 ? ` · ${recipeWeight}g` : ''}):`;
+    document.getElementById('lbl-ref-kcal').innerText = 'Kcal/porción';
+    document.getElementById('lbl-ref-p').innerText = 'Prot/porción';
+    document.getElementById('lbl-ref-c').innerText = 'Carb/porción';
+    document.getElementById('lbl-ref-g').innerText = 'Grasa/porción';
+  } else {
+    amtLabel.innerHTML = '<b>Gramos (g):</b>';
+    if (!amtInput.value || parseFloat(amtInput.value) <= 5) amtInput.value = 100;
+    amtInput.step = '1';
+    amtInput.placeholder = '100';
+    convBtn.classList.remove('hidden');
+    refLabel.innerText = 'Macros por cada 100 g:';
+    document.getElementById('lbl-ref-kcal').innerText = 'Kcal/100g';
+    document.getElementById('lbl-ref-p').innerText = 'Prot/100g';
+    document.getElementById('lbl-ref-c').innerText = 'Carb/100g';
+    document.getElementById('lbl-ref-g').innerText = 'Grasa/100g';
+  }
+}
+
+function onManualFoodNameInput() {
+  if (selectedIsRecipe) {
+    setFoodInputMode(false, 0);
+  }
 }
 
 function filterLocalFoods() {
@@ -2220,104 +2342,206 @@ function filterLocalFoods() {
     .filter(f => f.name.toLowerCase().includes(q));
 
   if (matches.length === 0) {
-    box.innerHTML = `<div class="search-item" style="color:var(--text-muted);">No está en tu biblioteca local. Pulsa <b>"🌐 Online"</b> o usa <b>"📷 Foto Tabla"</b>.</div>`;
+    box.innerHTML = `<div class="search-item" onclick="searchOnlineFoods()" style="color:var(--info); font-weight:700;">🌐 No está en tu biblioteca. Pulsa aquí o en "Online" para buscar "${document.getElementById('food-search-query').value}"...</div>`;
   } else {
-    box.innerHTML = matches.map(f => `
-      <div class="search-item" onclick='selectFoodObject(${JSON.stringify(f).replace(/'/g, "&apos;")})'>
-        <b>${f.name}</b> <span style="color:var(--text-muted); font-size:0.78rem;">(${f.kcal} kcal | P:${f.p} C:${f.c} G:${f.g})</span>
-      </div>
-    `).join('');
+    box.innerHTML = matches.map(f => {
+      const isRec = Boolean(f.isRecipe);
+      const dispKcal = isRec ? f.totalKcal : f.kcal;
+      const dispP = isRec ? f.totalP : f.p;
+      const dispC = isRec ? f.totalC : f.c;
+      const dispG = isRec ? f.totalG : f.g;
+      const unitHint = isRec ? `1 porción (${f.totalWeight || '?'}g)` : '100g';
+      const payload = JSON.stringify(f).replace(/'/g, "&apos;");
+      return `
+        <div class="search-item" onclick='selectFoodObject(${payload})'>
+          <div style="min-width:0;">
+            <b>${f.name}</b>
+            <div style="color:var(--text-muted); font-size:0.76rem;">
+              ${dispKcal} kcal | P:${dispP}g C:${dispC}g G:${dispG}g (${unitHint})
+            </div>
+          </div>
+          <span class="src-tag src-local">${isRec ? '🍲 Receta' : '📁 Local'}</span>
+        </div>
+      `;
+    }).join('');
   }
   box.classList.remove('hidden');
 }
 
-async function searchOpenFoodFactsText() {
+// BÚSQUEDA ONLINE DUAL: USDA FoodData Central (ultrarrápido) + Open Food Facts España
+async function fetchUSDASearch(query) {
+  const enQuery = translateQueryToEnglishForUSDA(query);
+  const controller = new AbortController();
+  const tid = setTimeout(() => controller.abort(), 7000);
+  try {
+    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=DEMO_KEY&query=${encodeURIComponent(enQuery)}&pageSize=10&dataType=Foundation,SR%20Legacy,Branded`;
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(tid);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.foods || []).map(food => {
+      const nutrients = food.foodNutrients || [];
+      const getN = (id, num) => {
+        const found = nutrients.find(n => n.nutrientId === id || String(n.nutrientNumber) === String(num));
+        return found ? Number(found.value) || 0 : 0;
+      };
+      const kcal = Math.round(getN(1008, '208'));
+      const p = +getN(1003, '203').toFixed(1);
+      const c = +getN(1005, '205').toFixed(1);
+      const g = +getN(1004, '204').toFixed(1);
+      const brand = food.brandOwner || food.brandName;
+      return {
+        name: `${food.description}${brand ? ' (' + brand + ')' : ''}`,
+        kcal, p, c, g,
+        source: 'USDA'
+      };
+    }).filter(x => x.kcal > 0 || x.p > 0 || x.c > 0 || x.g > 0);
+  } catch (e) {
+    clearTimeout(tid);
+    return [];
+  }
+}
+
+async function fetchOpenFoodFactsSpain(query) {
+  const controller = new AbortController();
+  const tid = setTimeout(() => controller.abort(), 6000);
+  try {
+    const url = `https://es.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=10&fields=product_name,brands,nutriments`;
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(tid);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.products || [])
+      .filter(p => p.product_name && p.nutriments)
+      .map(p => {
+        const n = p.nutriments;
+        const kcal = Math.round(n['energy-kcal_100g'] || (n['energy_100g'] ? n['energy_100g'] / 4.184 : 0));
+        return {
+          name: `${p.product_name}${p.brands ? ' (' + p.brands.split(',')[0] + ')' : ''}`,
+          kcal,
+          p: +(n.proteins_100g || 0).toFixed(1),
+          c: +(n.carbohydrates_100g || 0).toFixed(1),
+          g: +(n.fat_100g || 0).toFixed(1),
+          source: 'OFF'
+        };
+      })
+      .filter(x => x.kcal > 0 || x.p > 0 || x.c > 0 || x.g > 0);
+  } catch (e) {
+    clearTimeout(tid);
+    return [];
+  }
+}
+
+async function searchOnlineFoods() {
   const q = document.getElementById('food-search-query').value.trim();
   if (!q) return alert('Escribe primero el nombre del alimento.');
   const box = document.getElementById('food-search-results');
-  box.innerHTML = `<div class="search-item">⏳ Buscando "${q}" en Open Food Facts (API v2)...</div>`;
+  box.innerHTML = `<div class="search-item">⏳ Consultando bases de datos nutricionales (USDA + Open Food Facts ES)...</div>`;
   box.classList.remove('hidden');
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 9000);
+  const [usdaRes, offRes] = await Promise.allSettled([
+    fetchUSDASearch(q),
+    fetchOpenFoodFactsSpain(q)
+  ]);
 
-  try {
-    const url = `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(q)}&countries_tags_en=spain&fields=product_name,brands,nutriments&page_size=10`;
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    let products = (data.products || []).filter(p => p.product_name && p.nutriments);
+  const usdaItems = usdaRes.status === 'fulfilled' ? usdaRes.value : [];
+  const offItems = offRes.status === 'fulfilled' ? offRes.value : [];
 
-    if (products.length === 0) {
-      const resGlobal = await fetch(`https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(q)}&fields=product_name,brands,nutriments&page_size=10`);
-      const dataGlobal = await resGlobal.json();
-      products = (dataGlobal.products || []).filter(p => p.product_name && p.nutriments);
-    }
-
-    if (products.length === 0) {
-      box.innerHTML = `<div class="search-item">Sin resultados online para "${q}". Puedes usar <b>📷 Foto Tabla</b> o rellenar abajo.</div>`;
-      return;
-    }
-
-    box.innerHTML = products.map(p => {
-      const n = p.nutriments;
-      const kcal = Math.round(n['energy-kcal_100g'] || (n['energy_100g'] ? n['energy_100g'] / 4.184 : 0));
-      const obj = {
-        name: `${p.product_name}${p.brands ? ' (' + p.brands.split(',')[0] + ')' : ''}`,
-        kcal,
-        p: +(n.proteins_100g || 0).toFixed(1),
-        c: +(n.carbohydrates_100g || 0).toFixed(1),
-        g: +(n.fat_100g || 0).toFixed(1)
-      };
-      return `
-        <div class="search-item" onclick='selectFoodObject(${JSON.stringify(obj).replace(/'/g, "&apos;")})'>
-          🌐 <b>${obj.name}</b><br>
-          <span style="color:var(--text-muted); font-size:0.78rem;">${obj.kcal} kcal | P:${obj.p}g C:${obj.c}g G:${obj.g}g (por 100g)</span>
-        </div>
-      `;
-    }).join('');
-  } catch (e) {
-    clearTimeout(timeoutId);
-    box.innerHTML = `<div class="search-item" style="color:var(--error);">El servidor de Open Food Facts está saturado ahora mismo. Haz una foto con <b>📷 Foto Tabla</b> o rellena los macros abajo.</div>`;
+  // Intercalamos productos españoles (OFF) y valores exactos USDA
+  const combined = [];
+  const maxLen = Math.max(usdaItems.length, offItems.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (offItems[i]) combined.push(offItems[i]);
+    if (usdaItems[i]) combined.push(usdaItems[i]);
   }
+
+  if (combined.length === 0) {
+    box.innerHTML = `<div class="search-item">Sin resultados online para "${q}". Puedes usar <b>📷 Foto Tabla</b> o rellenar los macros abajo y pulsar <b>💾 Guardar</b>.</div>`;
+    return;
+  }
+
+  box.innerHTML = combined.slice(0, 14).map(obj => {
+    const payload = JSON.stringify(obj).replace(/'/g, "&apos;");
+    const badgeHtml = obj.source === 'OFF'
+      ? `<span class="src-tag src-off">🇪🇸 Supermercado</span>`
+      : `<span class="src-tag src-usda">🔬 USDA</span>`;
+    return `
+      <div class="search-item" onclick='selectFoodObject(${payload})'>
+        <div style="min-width:0;">
+          <b>${obj.name}</b>
+          <div style="color:var(--text-muted); font-size:0.76rem;">${obj.kcal} kcal | P:${obj.p}g C:${obj.c}g G:${obj.g}g (por 100g)</div>
+        </div>
+        ${badgeHtml}
+      </div>
+    `;
+  }).join('');
 }
 
 function selectFoodObject(f) {
   document.getElementById('food-name').value = f.name;
-  document.getElementById('food-kcal100').value = f.kcal;
-  document.getElementById('food-p100').value = f.p;
-  document.getElementById('food-c100').value = f.c;
-  document.getElementById('food-g100').value = f.g;
+  if (f.isRecipe) {
+    setFoodInputMode(true, f.totalWeight || 0);
+    document.getElementById('food-kcal100').value = f.totalKcal;
+    document.getElementById('food-p100').value = f.totalP;
+    document.getElementById('food-c100').value = f.totalC;
+    document.getElementById('food-g100').value = f.totalG;
+  } else {
+    setFoodInputMode(false, 0);
+    document.getElementById('food-kcal100').value = f.kcal;
+    document.getElementById('food-p100').value = f.p;
+    document.getElementById('food-c100').value = f.c;
+    document.getElementById('food-g100').value = f.g;
+  }
   document.getElementById('food-search-results').classList.add('hidden');
 }
 
 async function addFoodEntry(saveToLibrary) {
   const mealSlot = document.getElementById('food-meal-slot').value;
   const name = document.getElementById('food-name').value.trim();
-  const grams = parseFloat(document.getElementById('food-grams').value) || 0;
-  const kcal100 = parseFloat(document.getElementById('food-kcal100').value) || 0;
-  const p100 = parseFloat(document.getElementById('food-p100').value) || 0;
-  const c100 = parseFloat(document.getElementById('food-c100').value) || 0;
-  const g100 = parseFloat(document.getElementById('food-g100').value) || 0;
+  const amount = parseFloat(document.getElementById('food-grams').value) || 0;
+  const kcalRef = parseFloat(document.getElementById('food-kcal100').value) || 0;
+  const pRef = parseFloat(document.getElementById('food-p100').value) || 0;
+  const cRef = parseFloat(document.getElementById('food-c100').value) || 0;
+  const gRef = parseFloat(document.getElementById('food-g100').value) || 0;
 
-  if (!name || grams <= 0) return alert('Introduce nombre y gramos válidos.');
+  if (!name || amount <= 0) {
+    return alert(selectedIsRecipe ? 'Introduce nombre y porciones válidas (ej. 1 o 1.5).' : 'Introduce nombre y gramos válidos.');
+  }
 
-  if (saveToLibrary) {
-    fitDB.foodsLibrary['food_' + Date.now()] = { name, kcal: kcal100, p: p100, c: c100, g: g100 };
+  if (saveToLibrary && !selectedIsRecipe) {
+    fitDB.foodsLibrary['food_' + Date.now()] = { name, kcal: kcalRef, p: pRef, c: cRef, g: gRef };
     await saveMetaDB();
   }
 
-  const ratio = grams / 100;
   const dateKey = getActiveDateKey();
   const day = ensureDayRecord(dateKey);
-  day.nutrition.entries.push({
-    mealSlot, name, grams,
-    kcal: Math.round(kcal100 * ratio),
-    p: +(p100 * ratio).toFixed(1),
-    c: +(c100 * ratio).toFixed(1),
-    g: +(g100 * ratio).toFixed(1)
-  });
+
+  if (selectedIsRecipe) {
+    const mult = amount; // 1 = receta entera, 1.5 = x1.5, etc.
+    day.nutrition.entries.push({
+      mealSlot,
+      name,
+      isRecipe: true,
+      portions: mult,
+      grams: selectedRecipeWeight > 0 ? Math.round(selectedRecipeWeight * mult) : 0,
+      kcal: Math.round(kcalRef * mult),
+      p: +(pRef * mult).toFixed(1),
+      c: +(cRef * mult).toFixed(1),
+      g: +(gRef * mult).toFixed(1)
+    });
+  } else {
+    const ratio = amount / 100;
+    day.nutrition.entries.push({
+      mealSlot,
+      name,
+      isRecipe: false,
+      grams: amount,
+      kcal: Math.round(kcalRef * ratio),
+      p: +(pRef * ratio).toFixed(1),
+      c: +(cRef * ratio).toFixed(1),
+      g: +(gRef * ratio).toFixed(1)
+    });
+  }
 
   await saveMonthDB(dateKey.slice(0, 7));
   renderNutritionDay();
@@ -2387,17 +2611,22 @@ function renderNutritionDay() {
 
     const itemsHTML = slotItems.length === 0
       ? `<p style="font-size:0.78rem; color:var(--text-muted); margin:0.2rem 0;">Sin alimentos registrados</p>`
-      : slotItems.map(item => `
-          <div class="meal-food-item">
-            <div style="min-width:0;">
-              <b style="font-size:0.86rem;">${item.name}</b>
-              <div style="font-size:0.75rem; color:var(--text-muted);">
-                ${item.grams}g · <span style="color:var(--primary); font-weight:700;">${item.kcal} kcal</span> · P:${item.p}g C:${item.c}g G:${item.g}g
+      : slotItems.map(item => {
+          const amountLabel = item.isRecipe
+            ? `${item.portions} ${item.portions === 1 ? 'porción' : 'porciones'}${item.grams > 0 ? ` (${item.grams}g)` : ''}`
+            : `${item.grams}g`;
+          return `
+            <div class="meal-food-item">
+              <div style="min-width:0;">
+                <b style="font-size:0.86rem;">${item.name}</b>
+                <div style="font-size:0.75rem; color:var(--text-muted);">
+                  ${amountLabel} · <span style="color:var(--primary); font-weight:700;">${item.kcal} kcal</span> · P:${item.p}g C:${item.c}g G:${item.g}g
+                </div>
               </div>
+              <button class="btn btn-danger btn-sm" style="padding:0.3rem 0.52rem;" onclick="removeFoodEntry(${item.idx})">✕</button>
             </div>
-            <button class="btn btn-danger btn-sm" style="padding:0.3rem 0.52rem;" onclick="removeFoodEntry(${item.idx})">✕</button>
-          </div>
-        `).join('');
+          `;
+        }).join('');
 
     return `
       <div class="meal-slot-card">
@@ -2429,8 +2658,12 @@ function toggleBarcodeScanner() {
       stopBarcodeScanner();
       showToast(`🔍 Buscando código ${barcode}...`);
       try {
-        const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
-        const data = await res.json();
+        let res = await fetch(`https://es.openfoodfacts.org/api/v0/product/${barcode}.json`);
+        let data = await res.json();
+        if (data.status !== 1 || !data.product) {
+          res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+          data = await res.json();
+        }
         if (data.status === 1 && data.product) {
           const p = data.product, n = p.nutriments || {};
           selectFoodObject({
@@ -2441,8 +2674,8 @@ function toggleBarcodeScanner() {
             g: +(n.fat_100g || 0).toFixed(1)
           });
           showToast('✅ Producto cargado');
-        } else { alert('Código no encontrado en Open Food Facts.'); }
-      } catch (e) { alert('Error de conexión.'); }
+        } else { alert('Código no encontrado. Usa "📷 Foto Tabla" para leer la etiqueta.'); }
+      } catch (e) { alert('Error de conexión con el servidor de códigos.'); }
     },
     () => {}
   ).catch(() => { alert('No se pudo iniciar la cámara.'); box.classList.add('hidden'); });
@@ -2453,13 +2686,17 @@ function stopBarcodeScanner() {
   if (html5QrCode) { html5QrCode.stop().catch(() => {}); html5QrCode = null; }
 }
 
-// ==================== CREADOR DE RECETAS MEJORADO ====================
+// ==================== CREADOR DE RECETAS (1º ALIMENTO -> 2º GRAMOS -> AUTO-SUMA) ====================
 function toggleRecipeModal() {
-  document.getElementById('recipe-creator-card').classList.toggle('hidden');
+  const card = document.getElementById('recipe-creator-card');
+  card.classList.toggle('hidden');
   tempRecipeIngredients = [];
   selectedRecipeFoodKey = null;
+  document.getElementById('rec-name').value = '';
   document.getElementById('rec-ing-search').value = '';
+  document.getElementById('rec-ing-grams').value = '';
   document.getElementById('rec-search-results').classList.add('hidden');
+  document.getElementById('rec-step2-grams-box').classList.add('hidden');
   renderRecipeIngredients();
 }
 
@@ -2467,18 +2704,24 @@ function filterRecipeIngredients() {
   const q = document.getElementById('rec-ing-search').value.trim().toLowerCase();
   const box = document.getElementById('rec-search-results');
   selectedRecipeFoodKey = null;
+  document.getElementById('rec-step2-grams-box').classList.add('hidden');
+
   if (!q) { box.classList.add('hidden'); return; }
 
   const matches = Object.keys(fitDB.foodsLibrary || {})
     .map(k => ({ key: k, ...fitDB.foodsLibrary[k] }))
-    .filter(f => f.name.toLowerCase().includes(q));
+    .filter(f => !f.isRecipe && f.name.toLowerCase().includes(q));
 
   if (matches.length === 0) {
-    box.innerHTML = `<div class="search-item" style="color:var(--text-muted);">No encontrado en biblioteca. Guárdalo primero desde "Añadir Alimento".</div>`;
+    box.innerHTML = `<div class="search-item" style="color:var(--text-muted);">No encontrado en biblioteca. Guárdalo primero desde "Añadir Alimento" con 💾 Guardar.</div>`;
   } else {
     box.innerHTML = matches.map(f => `
       <div class="search-item" onclick="pickRecipeIngredient('${f.key}')">
-        <b>${f.name}</b> <span style="color:var(--text-muted); font-size:0.78rem;">(${f.kcal} kcal/100g · P:${f.p} C:${f.c} G:${f.g})</span>
+        <div>
+          <b>${f.name}</b>
+          <div style="color:var(--text-muted); font-size:0.76rem;">${f.kcal} kcal/100g · P:${f.p}g C:${f.c}g G:${f.g}g</div>
+        </div>
+        <span class="src-tag src-local">Elegir</span>
       </div>
     `).join('');
   }
@@ -2486,36 +2729,53 @@ function filterRecipeIngredients() {
 }
 
 function pickRecipeIngredient(key) {
+  const food = fitDB.foodsLibrary[key];
+  if (!food) return;
   selectedRecipeFoodKey = key;
-  document.getElementById('rec-ing-search').value = fitDB.foodsLibrary[key].name;
+  document.getElementById('rec-ing-search').value = food.name;
   document.getElementById('rec-search-results').classList.add('hidden');
-  addSelectedIngredientToRecipe();
+
+  // Paso 2: Mostrar y enfocar obligatoriamente los gramos
+  document.getElementById('rec-selected-food-label').innerText = food.name;
+  const gramsInp = document.getElementById('rec-ing-grams');
+  gramsInp.value = '';
+  document.getElementById('rec-step2-grams-box').classList.remove('hidden');
+  setTimeout(() => gramsInp.focus(), 50);
 }
 
 function addSelectedIngredientToRecipe() {
-  let key = selectedRecipeFoodKey;
-  if (!key) {
-    const q = document.getElementById('rec-ing-search').value.trim().toLowerCase();
-    key = Object.keys(fitDB.foodsLibrary || {}).find(k => fitDB.foodsLibrary[k].name.toLowerCase().includes(q));
+  if (!selectedRecipeFoodKey) {
+    alert('Primero busca y selecciona un alimento de la lista.');
+    document.getElementById('rec-ing-search').focus();
+    return;
   }
-  const grams = parseFloat(document.getElementById('rec-ing-grams').value) || 0;
-  if (!key || grams <= 0) return alert('Selecciona un ingrediente válido e indica los gramos.');
+  const gramsInp = document.getElementById('rec-ing-grams');
+  const grams = parseFloat(gramsInp.value) || 0;
+  if (grams <= 0) {
+    alert('⚠️ Introduce obligatoriamente los gramos de este ingrediente.');
+    gramsInp.focus();
+    return;
+  }
 
-  tempRecipeIngredients.push({ ...fitDB.foodsLibrary[key], grams });
+  tempRecipeIngredients.push({ ...fitDB.foodsLibrary[selectedRecipeFoodKey], grams });
   selectedRecipeFoodKey = null;
-  document.getElementById('rec-ing-search').value = '';
+  gramsInp.value = '';
+  document.getElementById('rec-step2-grams-box').classList.add('hidden');
+  const searchInp = document.getElementById('rec-ing-search');
+  searchInp.value = '';
   renderRecipeIngredients();
+  searchInp.focus();
 }
 
 function renderRecipeIngredients() {
-  let rawWeight = 0, sK = 0, sP = 0, sC = 0, sG = 0;
+  let totalWeight = 0, sK = 0, sP = 0, sC = 0, sG = 0;
   document.getElementById('rec-ingredients-list').innerHTML = tempRecipeIngredients.map((ing, i) => {
     const r = ing.grams / 100;
     const ik = Math.round(ing.kcal * r);
     const ip = +(ing.p * r).toFixed(1);
     const ic = +(ing.c * r).toFixed(1);
     const ig = +(ing.g * r).toFixed(1);
-    rawWeight += ing.grams;
+    totalWeight += ing.grams;
     sK += ik; sP += ip; sC += ic; sG += ig;
     return `
       <div class="list-row" style="padding:0.5rem 0.72rem;">
@@ -2529,23 +2789,35 @@ function renderRecipeIngredients() {
   }).join('');
 
   document.getElementById('rec-totals-preview').innerHTML =
-    `Peso ingredientes: <b>${rawWeight} g</b> · Total receta: <b>${Math.round(sK)} kcal</b> (P:${sP.toFixed(1)}g C:${sC.toFixed(1)}g G:${sG.toFixed(1)}g)`;
+    `Peso total sumado: <b>${Math.round(totalWeight)} g</b> · Total receta (1 porción): <b>${Math.round(sK)} kcal</b> (P:${sP.toFixed(1)}g C:${sC.toFixed(1)}g G:${sG.toFixed(1)}g)`;
 }
 
 async function saveRecipeToLibrary() {
   const recName = document.getElementById('rec-name').value.trim();
-  const finalWeight = parseFloat(document.getElementById('rec-final-weight').value) || 0;
-  if (!recName || tempRecipeIngredients.length === 0 || finalWeight <= 0) return alert('Completa el nombre, ingredientes y peso final.');
+  if (!recName) return alert('Escribe un nombre para la receta.');
+  if (tempRecipeIngredients.length === 0) return alert('Añade al menos un ingrediente con sus gramos.');
 
-  let sK = 0, sP = 0, sC = 0, sG = 0;
+  let totalWeight = 0, sK = 0, sP = 0, sC = 0, sG = 0;
   tempRecipeIngredients.forEach(ing => {
     const r = ing.grams / 100;
-    sK += ing.kcal * r; sP += ing.p * r; sC += ing.c * r; sG += ing.g * r;
+    totalWeight += ing.grams;
+    sK += ing.kcal * r;
+    sP += ing.p * r;
+    sC += ing.c * r;
+    sG += ing.g * r;
   });
 
-  const f100 = 100 / finalWeight;
+  const safeWeight = Math.max(1, Math.round(totalWeight));
+  const f100 = 100 / safeWeight;
+
   fitDB.foodsLibrary['rec_' + Date.now()] = {
     name: `🍲 ${recName}`,
+    isRecipe: true,
+    totalWeight: safeWeight,
+    totalKcal: Math.round(sK),
+    totalP: +sP.toFixed(1),
+    totalC: +sC.toFixed(1),
+    totalG: +sG.toFixed(1),
     kcal: Math.round(sK * f100),
     p: +(sP * f100).toFixed(1),
     c: +(sC * f100).toFixed(1),
@@ -2553,7 +2825,7 @@ async function saveRecipeToLibrary() {
   };
   await saveMetaDB();
   toggleRecipeModal();
-  showToast('🍲 Receta guardada en tu biblioteca');
+  showToast('🍲 Receta guardada (1 porción = receta entera)');
 }
 
 // ==================== ENTRENAMIENTO MULTISESIÓN + PROMPT IA + PARSER FLEXIBLE ====================
@@ -2630,7 +2902,7 @@ function filterExercisesBilingual(sessIdx, position = 'top') {
 
   let html = localMatches.map(ex => `
     <div class="search-item" onclick="addExerciseToSession(${sessIdx}, '${ex.es.replace(/'/g, "\\'")}', '${ex.muscle}', '${position}')">
-      <b>${ex.es}</b> <span style="color:var(--text-muted); font-size:0.78rem;">/ ${ex.en} · [${ex.muscle}]</span>
+      <div><b>${ex.es}</b> <span style="color:var(--text-muted); font-size:0.78rem;">/ ${ex.en} · [${ex.muscle}]</span></div>
     </div>
   `).join('');
 
@@ -2663,7 +2935,7 @@ async function searchWgerExercises(sessIdx, query, position = 'top') {
       const cat = item.data?.category || 'General';
       return `
         <div class="search-item" onclick="addExerciseToSession(${sessIdx}, '${name.replace(/'/g, "\\'")}', '${cat}', '${position}')">
-          🌐 <b>${name}</b> <span style="color:var(--text-muted); font-size:0.78rem;">[${cat}]</span>
+          <div>🌐 <b>${name}</b> <span style="color:var(--text-muted); font-size:0.78rem;">[${cat}]</span></div>
         </div>
       `;
     }).join('');
