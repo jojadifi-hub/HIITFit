@@ -15,20 +15,21 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<!-- Escáner de códigos de barras HTML5 -->
+<!-- Escáner de códigos de barras + OCR Foto Tabla Nutricional -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
 <style>
   :root {
     --bg-color: #f4f7f5;
-    --bg-gradient: radial-gradient(circle at top right, rgba(22, 163, 74, 0.07), transparent 42%);
+    --bg-gradient: radial-gradient(circle at top right, rgba(22, 163, 74, 0.08), transparent 45%);
     --card-bg: #ffffff;
     --card-hover: #f1f5f9;
-    --card-secondary: #f3f6f4;
-    --header-bg: rgba(255, 255, 255, 0.85);
+    --card-secondary: #f2f6f4;
+    --header-bg: rgba(255, 255, 255, 0.9);
     --primary: #16a34a;
     --primary-hover: #15803d;
-    --primary-soft: rgba(22, 163, 74, 0.1);
+    --primary-soft: rgba(22, 163, 74, 0.11);
     --text-main: #0f172a;
     --text-muted: #64748b;
     --success: #10b981;
@@ -36,19 +37,19 @@
     --warning: #f59e0b;
     --info: #2563eb;
     --border: rgba(15, 23, 42, 0.08);
-    --shadow-card: 0 10px 28px -8px rgba(15, 23, 42, 0.06);
+    --shadow-card: 0 8px 24px -8px rgba(15, 23, 42, 0.07);
   }
 
   html.dark {
     --bg-color: #090d14;
-    --bg-gradient: radial-gradient(circle at top right, rgba(34, 197, 94, 0.12), transparent 45%);
+    --bg-gradient: radial-gradient(circle at top right, rgba(34, 197, 94, 0.13), transparent 45%);
     --card-bg: #111824;
     --card-hover: #182234;
     --card-secondary: #192334;
-    --header-bg: rgba(17, 24, 36, 0.84);
+    --header-bg: rgba(17, 24, 36, 0.9);
     --primary: #22c55e;
     --primary-hover: #16a34a;
-    --primary-soft: rgba(34, 197, 94, 0.14);
+    --primary-soft: rgba(34, 197, 94, 0.15);
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --success: #10b981;
@@ -56,7 +57,7 @@
     --warning: #f59e0b;
     --info: #38bdf8;
     --border: rgba(255, 255, 255, 0.08);
-    --shadow-card: 0 14px 32px -8px rgba(0, 0, 0, 0.5);
+    --shadow-card: 0 12px 28px -8px rgba(0, 0, 0, 0.52);
   }
 
   *, *::before, *::after { box-sizing: border-box; }
@@ -73,60 +74,60 @@
     background-image: var(--bg-gradient);
     background-attachment: fixed;
     color: var(--text-main);
-    margin: 0; padding: 0;
+    margin: 0; padding: 0 0 78px 0;
     display: flex; flex-direction: column; min-height: 100vh;
     -webkit-tap-highlight-color: transparent;
     font-variant-numeric: tabular-nums;
-    transition: background-color 0.22s ease, color 0.22s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   header {
     background-color: var(--header-bg);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    padding: 0.8rem 1rem;
+    padding: 0.65rem 0.85rem;
     border-bottom: 1px solid var(--border);
     display: flex; justify-content: space-between; align-items: center;
-    gap: 0.5rem;
+    gap: 0.35rem;
     position: sticky; top: 0; z-index: 50;
   }
 
   h1, h2, h3, h4 { margin: 0; font-weight: 800; letter-spacing: -0.025em; }
 
   .container {
-    padding: 1rem; max-width: 880px; margin: 0 auto; width: 100%;
+    padding: 0.75rem 0.85rem; max-width: 860px; margin: 0 auto; width: 100%;
     flex: 1;
   }
 
   .container > div:not(.hidden) {
-    animation: fadeIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: fadeIn 0.2s ease-out forwards;
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
+    from { opacity: 0; transform: translateY(5px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
   .card {
     background-color: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 20px; padding: 1.25rem; margin-bottom: 1.05rem;
+    border-radius: 18px; padding: 1.05rem; margin-bottom: 0.85rem;
     box-shadow: var(--shadow-card);
   }
 
   .card-hero {
-    background: linear-gradient(145deg, var(--card-bg) 55%, var(--primary-soft) 100%);
+    background: linear-gradient(150deg, var(--card-bg) 58%, var(--primary-soft) 100%);
   }
 
   .btn {
     background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     color: white; border: none;
-    padding: 0.82rem 1.15rem; border-radius: 12px; font-weight: 700;
-    cursor: pointer; width: 100%; margin-top: 0.4rem;
-    transition: transform 0.12s ease, box-shadow 0.15s ease, opacity 0.15s ease;
-    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-    font-size: 0.94rem; font-family: inherit;
-    box-shadow: 0 6px 16px -4px rgba(22, 163, 74, 0.35);
+    padding: 0.78rem 1.05rem; border-radius: 12px; font-weight: 700;
+    cursor: pointer; width: 100%; margin-top: 0.35rem;
+    transition: transform 0.12s ease, opacity 0.15s ease;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
+    font-size: 0.92rem; font-family: inherit;
+    box-shadow: 0 5px 14px -4px rgba(22, 163, 74, 0.35);
   }
   .btn:hover { opacity: 0.94; }
   .btn:active { transform: scale(0.98); }
@@ -134,77 +135,118 @@
     background: var(--card-secondary); color: var(--text-main);
     border: 1px solid var(--border); box-shadow: none;
   }
-  .btn-danger {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: white; box-shadow: 0 4px 12px -3px rgba(239, 68, 68, 0.35);
-  }
-  .btn-warning {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: #fff; box-shadow: 0 4px 12px -3px rgba(245, 158, 11, 0.35);
-  }
-  .btn-info {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    color: white; box-shadow: 0 4px 12px -3px rgba(37, 99, 235, 0.35);
-  }
-  .btn-sm { padding: 0.45rem 0.78rem; font-size: 0.82rem; width: auto; margin-top: 0; border-radius: 10px; }
+  .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; box-shadow: none; }
+  .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: none; }
+  .btn-info { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; box-shadow: none; }
+  .btn-sm { padding: 0.42rem 0.7rem; font-size: 0.8rem; width: auto; margin-top: 0; border-radius: 10px; }
 
-  /* ==================== BOTONES PRINCIPALES HOME ==================== */
-  .nav-grid-big { display: grid; grid-template-columns: 1fr 1fr; gap: 0.95rem; margin: 1rem 0; }
-  @media (max-width: 550px) { .nav-grid-big { grid-template-columns: 1fr; } }
+  /* ==================== SELECTOR DE FECHA FINO Y COMPACTO ==================== */
+  .date-pill-bar {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 0.38rem 0.55rem;
+    margin-bottom: 0.75rem;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: var(--shadow-card);
+  }
+  .date-nav-arrow {
+    background: var(--card-secondary); border: 1px solid var(--border);
+    color: var(--text-main); border-radius: 10px;
+    width: 34px; height: 34px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.85rem;
+  }
+  .date-nav-arrow:active { transform: scale(0.94); }
+  .date-center-input {
+    border: none !important; background: transparent !important;
+    margin: 0 !important; padding: 0.2rem 0.4rem !important;
+    width: auto !important; font-weight: 800 !important; font-size: 0.92rem !important;
+    color: var(--text-main) !important; text-align: center;
+  }
 
+  /* ==================== DOS TARJETAS GRANDES SIEMPRE EN 2 COLUMNAS ==================== */
+  .nav-grid-big {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; margin: 0.75rem 0;
+  }
   .big-nav-btn {
     background: var(--card-bg);
-    border: 1px solid var(--border); padding: 1.55rem 1.15rem; border-radius: 20px;
-    text-align: center; cursor: pointer; position: relative; overflow: hidden;
-    transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+    border: 1px solid var(--border); padding: 1.05rem 0.75rem; border-radius: 18px;
+    text-align: center; cursor: pointer; position: relative;
+    transition: transform 0.15s ease, border-color 0.15s ease;
     box-shadow: var(--shadow-card);
   }
   .big-nav-btn.nutri-card {
-    background: linear-gradient(155deg, var(--card-bg) 50%, rgba(16, 185, 129, 0.11) 100%);
+    background: linear-gradient(155deg, var(--card-bg) 48%, rgba(22, 163, 74, 0.13) 100%);
   }
   .big-nav-btn.train-card {
-    background: linear-gradient(155deg, var(--card-bg) 50%, rgba(59, 130, 246, 0.11) 100%);
+    background: linear-gradient(155deg, var(--card-bg) 48%, rgba(37, 99, 235, 0.12) 100%);
   }
-  .big-nav-btn:hover {
-    border-color: var(--primary); transform: translateY(-3px);
-    box-shadow: 0 14px 28px -8px rgba(22, 163, 74, 0.22);
-  }
+  .big-nav-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
   .big-nav-btn:active { transform: scale(0.98); }
   .big-icon-pill {
-    width: 58px; height: 58px; border-radius: 18px;
+    width: 46px; height: 46px; border-radius: 14px;
     display: inline-flex; align-items: center; justify-content: center;
-    font-size: 1.85rem; margin-bottom: 0.55rem;
+    font-size: 1.55rem; margin-bottom: 0.4rem;
     background: var(--card-secondary); border: 1px solid var(--border);
   }
 
-  .nav-grid-small { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+  .nav-grid-small { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 0.85rem; }
   .small-nav-btn {
     background: var(--card-bg);
-    border: 1px solid var(--border); padding: 0.95rem 0.85rem; border-radius: 16px;
-    display: flex; align-items: center; justify-content: center; gap: 0.65rem;
-    cursor: pointer; font-weight: 700; font-size: 0.92rem;
+    border: 1px solid var(--border); padding: 0.78rem 0.65rem; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    cursor: pointer; font-weight: 700; font-size: 0.84rem;
     box-shadow: var(--shadow-card);
-    transition: transform 0.12s ease, border-color 0.15s ease;
   }
-  .small-nav-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
+  .small-nav-btn:hover { border-color: var(--primary); }
+
+  /* ==================== BARRA INFERIOR DE ACCESOS RÁPIDOS ==================== */
+  .bottom-dock {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--header-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    padding: 0.35rem 0.25rem calc(0.35rem + env(safe-area-inset-bottom));
+    z-index: 80;
+    box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.06);
+  }
+  .dock-btn {
+    background: transparent; border: none; color: var(--text-muted);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.18rem; cursor: pointer; padding: 0.25rem 0.1rem;
+    font-family: inherit; font-size: 0.67rem; font-weight: 700;
+    transition: color 0.15s ease, transform 0.1s ease;
+  }
+  .dock-btn i { font-size: 1.12rem; }
+  .dock-btn.active, .dock-btn:hover { color: var(--primary); }
+  .dock-btn:active { transform: scale(0.93); }
+  .dock-btn-center i {
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    color: #fff; width: 32px; height: 32px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35);
+  }
 
   select, input[type="text"], input[type="number"], input[type="date"], input[type="time"], input[type="month"], input[type="email"], input[type="password"], textarea {
-    width: 100%; padding: 0.68rem 0.78rem; background-color: var(--card-secondary);
+    width: 100%; padding: 0.62rem 0.72rem; background-color: var(--card-secondary);
     border: 1px solid var(--border); color: var(--text-main);
-    border-radius: 12px; margin-top: 0.3rem; margin-bottom: 0.65rem;
-    font-family: inherit; font-size: 0.93rem;
+    border-radius: 11px; margin-top: 0.25rem; margin-bottom: 0.55rem;
+    font-family: inherit; font-size: 0.9rem;
   }
   select:focus, input:focus, textarea:focus { outline: 2px solid var(--primary); border-color: transparent; }
 
   .hidden { display: none !important; }
   .badge {
-    background: var(--card-secondary); padding: 0.32rem 0.68rem;
-    border-radius: 999px; font-size: 0.8rem; border: 1px solid var(--border);
+    background: var(--card-secondary); padding: 0.28rem 0.6rem;
+    border-radius: 999px; font-size: 0.76rem; border: 1px solid var(--border);
   }
 
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
-  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
-  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.55rem; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.55rem; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
   @media (max-width: 550px) {
     .grid-4 { grid-template-columns: repeat(2, 1fr); }
     .estado-grid-2 { grid-template-columns: 1fr !important; }
@@ -212,32 +254,29 @@
 
   .metric-box {
     background: var(--card-secondary); border: 1px solid var(--border);
-    border-radius: 14px; padding: 0.78rem; text-align: center;
+    border-radius: 13px; padding: 0.7rem; text-align: center;
   }
-  .metric-box b { font-size: 1.08rem; display: block; margin-top: 0.15rem; }
-  .metric-box span { font-size: 0.74rem; color: var(--text-muted); }
+  .metric-box b { font-size: 1.02rem; display: block; margin-top: 0.12rem; }
+  .metric-box span { font-size: 0.72rem; color: var(--text-muted); }
 
   /* ==================== BARRAS DE MACROS VISUALES ==================== */
-  .macro-bar-group { margin-bottom: 0.9rem; }
+  .macro-bar-group { margin-bottom: 0.72rem; }
   .macro-bar-group:last-child { margin-bottom: 0; }
   .macro-bar-header {
     display: flex; justify-content: space-between; align-items: baseline;
-    font-size: 0.86rem; margin-bottom: 0.32rem;
+    font-size: 0.84rem; margin-bottom: 0.26rem;
   }
-  .macro-bar-title { font-weight: 700; display: flex; align-items: center; gap: 0.42rem; }
-  .macro-bar-values { font-weight: 800; font-size: 0.86rem; }
-  .macro-over-tag {
-    color: var(--error); font-size: 0.74rem; font-weight: 800;
-    margin-left: 0.35rem;
-  }
+  .macro-bar-title { font-weight: 700; display: flex; align-items: center; gap: 0.38rem; }
+  .macro-bar-values { font-weight: 800; font-size: 0.84rem; }
+  .macro-over-tag { color: var(--error); font-size: 0.72rem; font-weight: 800; margin-left: 0.3rem; }
   .progress-track {
-    background: var(--card-secondary); border-radius: 999px; height: 11px;
+    background: var(--card-secondary); border-radius: 999px; height: 10px;
     width: 100%; overflow: hidden; border: 1px solid var(--border);
   }
-  .progress-track.lg { height: 14px; }
+  .progress-track.lg { height: 13px; }
   .progress-fill {
     height: 100%; border-radius: 999px;
-    transition: width 0.38s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s ease;
+    transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s ease;
   }
   .fill-kcal { background: linear-gradient(90deg, #16a34a, #22c55e); }
   .fill-prot { background: linear-gradient(90deg, #059669, #10b981); }
@@ -245,10 +284,39 @@
   .fill-fat  { background: linear-gradient(90deg, #d97706, #fbbf24); }
   .fill-over { background: linear-gradient(90deg, #dc2626, #ef4444) !important; }
 
+  /* ==================== TARJETAS DE TOMAS ESTILO APP MACROS (EN VERDE) ==================== */
+  .meal-slot-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 18px; padding: 0.95rem; margin-bottom: 0.8rem;
+    box-shadow: var(--shadow-card);
+    border-top: 3px solid var(--primary);
+  }
+  .meal-slot-top {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 0.55rem; padding-bottom: 0.45rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .meal-slot-macros {
+    font-size: 0.74rem; color: var(--text-muted); font-weight: 700;
+  }
+  .meal-food-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.5rem 0; border-bottom: 1px dashed var(--border); gap: 0.4rem;
+  }
+  .meal-food-item:last-of-type { border-bottom: none; }
+  .meal-add-inline {
+    width: 100%; background: var(--primary-soft); color: var(--primary);
+    border: 1px dashed var(--primary); border-radius: 10px;
+    padding: 0.48rem; font-weight: 800; font-size: 0.82rem;
+    cursor: pointer; margin-top: 0.45rem; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 0.35rem;
+  }
+  .meal-add-inline:active { transform: scale(0.98); }
+
   /* ==================== TARJETAS INTERACTIVAS ESTADO ==================== */
   .estado-tile {
     background: var(--card-bg); border: 1px solid var(--border);
-    border-radius: 20px; padding: 1.1rem;
+    border-radius: 18px; padding: 1rem;
     box-shadow: var(--shadow-card);
     display: flex; flex-direction: column; justify-content: space-between;
   }
@@ -259,42 +327,37 @@
 
   .estado-tile-header {
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.7rem;
   }
   .estado-tile-title {
-    font-weight: 800; font-size: 0.96rem; display: flex; align-items: center; gap: 0.45rem;
+    font-weight: 800; font-size: 0.94rem; display: flex; align-items: center; gap: 0.45rem;
   }
   .stepper-box {
     display: flex; align-items: center; justify-content: space-between;
     background: var(--card-secondary); border: 1px solid var(--border);
-    border-radius: 14px; padding: 0.35rem;
+    border-radius: 13px; padding: 0.3rem;
   }
   .stepper-btn {
-    width: 40px; height: 40px; border-radius: 11px; border: none;
-    background: var(--primary); color: #fff; font-size: 1.25rem; font-weight: 800;
+    width: 38px; height: 38px; border-radius: 10px; border: none;
+    background: var(--primary); color: #fff; font-size: 1.2rem; font-weight: 800;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
   }
-  .stepper-btn:active { transform: scale(0.94); }
   .stepper-input {
-    width: 95px !important; margin: 0 !important; text-align: center;
-    font-size: 1.35rem !important; font-weight: 800; background: transparent !important;
+    width: 90px !important; margin: 0 !important; text-align: center;
+    font-size: 1.3rem !important; font-weight: 800; background: transparent !important;
     border: none !important; padding: 0.2rem !important;
   }
   .star-row { display: flex; gap: 0.35rem; margin: 0.35rem 0; }
   .star-btn {
-    flex: 1; padding: 0.48rem 0; border-radius: 11px; border: 1px solid var(--border);
-    background: var(--card-secondary); cursor: pointer; font-size: 1.1rem;
-    transition: transform 0.1s ease, background-color 0.15s ease;
+    flex: 1; padding: 0.45rem 0; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--card-secondary); cursor: pointer; font-size: 1.05rem;
   }
-  .star-btn.active {
-    background: rgba(245, 158, 11, 0.2); border-color: var(--warning);
-  }
-  .pill-group { display: flex; flex-direction: column; gap: 0.4rem; }
+  .star-btn.active { background: rgba(245, 158, 11, 0.2); border-color: var(--warning); }
+  .pill-group { display: flex; flex-direction: column; gap: 0.38rem; }
   .mood-pill {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0.52rem 0.78rem; border-radius: 11px; border: 1px solid var(--border);
-    background: var(--card-secondary); cursor: pointer; font-weight: 700; font-size: 0.84rem;
-    transition: all 0.15s ease;
+    padding: 0.48rem 0.72rem; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--card-secondary); cursor: pointer; font-weight: 700; font-size: 0.82rem;
   }
   .mood-pill.active-green { background: rgba(16, 185, 129, 0.18); border-color: #10b981; color: #059669; }
   html.dark .mood-pill.active-green { color: #34d399; }
@@ -305,92 +368,88 @@
 
   .pain-slider-row {
     background: var(--card-secondary); border: 1px solid var(--border);
-    border-radius: 13px; padding: 0.62rem 0.82rem; margin-bottom: 0.5rem;
+    border-radius: 12px; padding: 0.58rem 0.78rem; margin-bottom: 0.48rem;
   }
   .pain-slider-top {
     display: flex; justify-content: space-between; align-items: center;
-    font-size: 0.84rem; font-weight: 700; margin-bottom: 0.3rem;
+    font-size: 0.82rem; font-weight: 700; margin-bottom: 0.28rem;
   }
-  .pain-dot {
-    display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 0.4rem;
-  }
-  input[type="range"].pain-range {
-    width: 100%; accent-color: var(--primary); cursor: pointer; margin: 0;
-  }
+  .pain-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.4rem; }
+  input[type="range"].pain-range { width: 100%; accent-color: var(--primary); cursor: pointer; margin: 0; }
 
   .alert-banner {
     background-color: rgba(245, 158, 11, 0.14); border: 1px solid var(--warning);
-    color: var(--text-main); padding: 0.9rem; border-radius: 14px; margin-bottom: 1rem;
-    font-size: 0.88rem; line-height: 1.45;
+    color: var(--text-main); padding: 0.85rem; border-radius: 14px; margin-bottom: 0.85rem;
+    font-size: 0.85rem; line-height: 1.45;
   }
 
   .info-note {
     background-color: rgba(59, 130, 246, 0.09); border-left: 3px solid var(--info);
-    padding: 0.55rem 0.78rem; border-radius: 9px; font-size: 0.8rem;
-    color: var(--text-muted); margin-bottom: 0.75rem; line-height: 1.4;
+    padding: 0.52rem 0.75rem; border-radius: 9px; font-size: 0.78rem;
+    color: var(--text-muted); margin-bottom: 0.7rem; line-height: 1.4;
   }
 
   .list-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 0.72rem 0.85rem; background: var(--card-secondary); border-radius: 12px;
-    margin-bottom: 0.45rem; border: 1px solid var(--border); gap: 0.5rem;
+    padding: 0.65rem 0.8rem; background: var(--card-secondary); border-radius: 11px;
+    margin-bottom: 0.42rem; border: 1px solid var(--border); gap: 0.45rem;
   }
 
   .set-row {
     display: grid; grid-template-columns: 26px 1fr 1fr 0.75fr 0.75fr 32px 28px;
     gap: 0.25rem; align-items: center; margin-bottom: 0.4rem;
-    padding: 0.2rem; border-radius: 9px; transition: background-color 0.2s;
+    padding: 0.2rem; border-radius: 9px;
   }
   .set-row.set-done { background-color: rgba(16, 185, 129, 0.16); }
-  .set-row input { margin: 0; padding: 0.45rem 0.25rem; text-align: center; font-size: 0.86rem; }
+  .set-row input { margin: 0; padding: 0.42rem 0.22rem; text-align: center; font-size: 0.85rem; }
 
   .track-rep-row {
     display: grid; grid-template-columns: 28px 1fr 1fr 1fr 0.75fr 28px;
     gap: 0.25rem; align-items: center; margin-bottom: 0.4rem;
   }
-  .track-rep-row input { margin: 0; padding: 0.45rem 0.25rem; text-align: center; font-size: 0.85rem; }
+  .track-rep-row input { margin: 0; padding: 0.42rem 0.22rem; text-align: center; font-size: 0.84rem; }
 
   .search-dropdown {
     background: var(--card-bg); border: 1px solid var(--primary);
-    border-radius: 12px; max-height: 230px; overflow-y: auto;
-    margin-bottom: 0.75rem; box-shadow: 0 12px 28px rgba(0,0,0,0.16);
+    border-radius: 12px; max-height: 220px; overflow-y: auto;
+    margin-bottom: 0.65rem; box-shadow: 0 12px 28px rgba(0,0,0,0.16);
   }
   .search-item {
-    padding: 0.68rem 0.88rem; border-bottom: 1px solid var(--border);
-    cursor: pointer; font-size: 0.88rem;
+    padding: 0.62rem 0.82rem; border-bottom: 1px solid var(--border);
+    cursor: pointer; font-size: 0.86rem;
   }
   .search-item:hover { background: var(--card-hover); }
   .search-item:last-child { border-bottom: none; }
 
   .session-accordion-header {
     display: flex; justify-content: space-between; align-items: center;
-    cursor: pointer; user-select: none; gap: 0.5rem; flex-wrap: wrap;
+    cursor: pointer; user-select: none; gap: 0.45rem; flex-wrap: wrap;
   }
 
   .modal-backdrop {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    position: fixed; inset: 0; background: rgba(0,0,0,0.62);
     backdrop-filter: blur(4px);
     display: flex; align-items: center; justify-content: center;
-    padding: 1rem; z-index: 120;
+    padding: 0.85rem; z-index: 120;
   }
 
   #rest-timer-widget {
-    position: fixed; bottom: 1rem; right: 1rem;
+    position: fixed; bottom: 4.5rem; right: 0.85rem;
     background: var(--card-bg); border: 2px solid var(--primary);
-    border-radius: 16px; padding: 0.62rem 0.88rem;
+    border-radius: 15px; padding: 0.55rem 0.8rem;
     box-shadow: 0 12px 28px rgba(0,0,0,0.28); z-index: 90;
-    display: flex; align-items: center; gap: 0.45rem;
+    display: flex; align-items: center; gap: 0.4rem;
   }
 
   #scanner-reader {
-    width: 100%; border-radius: 14px; overflow: hidden;
-    border: 2px solid var(--primary); margin-bottom: 0.75rem;
+    width: 100%; border-radius: 12px; overflow: hidden;
+    border: 2px solid var(--primary); margin-bottom: 0.65rem;
   }
 
   #toast-banner {
-    position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%);
-    background: #1e293b; color: #fff; padding: 0.72rem 1.25rem;
-    border-radius: 12px; font-size: 0.9rem; font-weight: 600;
+    position: fixed; bottom: 4.6rem; left: 50%; transform: translateX(-50%);
+    background: #1e293b; color: #fff; padding: 0.68rem 1.15rem;
+    border-radius: 12px; font-size: 0.86rem; font-weight: 600;
     z-index: 200; box-shadow: 0 10px 25px rgba(0,0,0,0.35);
     max-width: 90vw; text-align: center;
   }
@@ -399,26 +458,27 @@
 <body>
 
 <header>
-  <div style="display:flex; align-items:center; gap:0.5rem;">
-    <button id="btn-back" class="btn btn-secondary btn-sm hidden" onclick="showView('home')" title="Volver al inicio">
+  <div style="display:flex; align-items:center; gap:0.4rem; min-width:0;">
+    <button id="btn-back" class="btn btn-secondary btn-sm hidden" onclick="showView('home')" title="Volver al inicio" style="padding:0.4rem 0.55rem;">
       <i class="fa-solid fa-arrow-left"></i>
     </button>
-    <div onclick="handleLogoNavigation()" style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-      <div style="background:linear-gradient(135deg, var(--primary), var(--primary-hover)); color:white; padding:0.42rem 0.62rem; border-radius:11px; box-shadow:0 4px 12px rgba(22,163,74,0.3);">
+    <div onclick="handleLogoNavigation()" style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+      <div style="background:linear-gradient(135deg, var(--primary), var(--primary-hover)); color:white; padding:0.36rem 0.52rem; border-radius:10px;">
         <i class="fa-solid fa-fire-flame-curved"></i>
       </div>
-      <h2 style="font-size:1.22rem;">HIITFit</h2>
+      <h2 style="font-size:1.1rem;">HIITFit</h2>
     </div>
   </div>
 
-  <div style="display:flex; align-items:center; gap:0.45rem;">
-    <span class="badge" id="readiness-pill" title="Semáforo Readiness hoy" style="font-weight:700;">🟢 Óptimo</span>
-    <button class="btn btn-secondary btn-sm" onclick="toggleTheme()" title="Cambiar Tema Día/Noche">
+  <div style="display:flex; align-items:center; gap:0.35rem; flex-shrink:0;">
+    <span class="badge" id="readiness-pill" style="font-weight:700; font-size:0.74rem;">🟢 Óptimo</span>
+    <button class="btn btn-secondary btn-sm" onclick="toggleTheme()" title="Tema Día/Noche" style="padding:0.4rem 0.55rem;">
       <i class="fa-solid fa-moon" id="theme-icon"></i>
     </button>
-    <div id="header-user-info" class="hidden" style="display:flex; align-items:center; gap:0.45rem;">
-      <span class="badge" id="user-email-badge" style="max-width:95px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">---</span>
-      <button class="btn btn-danger btn-sm" onclick="logoutUser()">Salir</button>
+    <div id="header-user-info" class="hidden" style="display:flex; align-items:center; gap:0.35rem;">
+      <button class="btn btn-danger btn-sm" onclick="logoutUser()" title="Cerrar sesión" style="padding:0.4rem 0.58rem;">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </button>
     </div>
   </div>
 </header>
@@ -427,12 +487,12 @@
 
   <!-- ==================== VISTA LOGIN Y REGISTRO ==================== -->
   <div id="view-login">
-    <div class="card card-hero" style="max-width:420px; margin: 3rem auto; text-align:center;">
-      <div style="background:linear-gradient(135deg, var(--primary), var(--primary-hover)); color:white; width:66px; height:66px; border-radius:20px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:1rem; box-shadow:0 12px 24px rgba(22,163,74,0.35);">
+    <div class="card card-hero" style="max-width:420px; margin: 2.5rem auto; text-align:center;">
+      <div style="background:linear-gradient(135deg, var(--primary), var(--primary-hover)); color:white; width:64px; height:64px; border-radius:20px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:1rem; box-shadow:0 12px 24px rgba(22,163,74,0.35);">
         <i class="fa-solid fa-fire-flame-curved fa-2x"></i>
       </div>
-      <h2 style="margin-bottom:0.3rem; font-size:1.85rem;">HIITFit</h2>
-      <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Nutrición Real, Carga Multisesión y Rendimiento</p>
+      <h2 style="margin-bottom:0.3rem; font-size:1.8rem;">HIITFit</h2>
+      <p style="color:var(--text-muted); font-size:0.88rem; margin-bottom:1.4rem;">Nutrición Real, Carga Multisesión y Rendimiento</p>
       
       <div style="text-align:left;">
         <label><b>Correo Electrónico:</b></label>
@@ -443,62 +503,61 @@
 
       <button class="btn" onclick="loginUser()">Entrar a mi Cuenta</button>
       <button class="btn btn-secondary" style="margin-top:0.5rem;" onclick="registerUser()">✨ Crear Cuenta Nueva</button>
-      <p id="login-error" style="color:var(--error); font-size:0.85rem; margin-top:0.75rem;"></p>
+      <p id="login-error" style="color:var(--error); font-size:0.84rem; margin-top:0.75rem;"></p>
     </div>
   </div>
 
   <!-- ==================== ONBOARDING / PERFIL Y OBJETIVOS ==================== -->
   <div id="view-onboarding" class="hidden">
-    <div class="card" style="max-width:580px; margin: 1.5rem auto;">
-      <div style="text-align:center; margin-bottom:1.25rem;">
+    <div class="card" style="max-width:580px; margin: 1rem auto;">
+      <div style="text-align:center; margin-bottom:1.1rem;">
         <span class="badge" style="background:var(--primary); color:white; font-weight:700;">Configuración Fisiológica y Nutricional</span>
-        <h2 style="margin-top:0.5rem;">👤 Perfil, Objetivo y Macros</h2>
-        <p style="color:var(--text-muted); font-size:0.86rem; margin-top:0.35rem;">
-          Elige si quieres que HIITFit calcule tus calorías dinámicamente según tu actividad diaria o si prefieres introducir los <b>gramos y calorías exactos de tu nutricionista</b>.
+        <h2 style="margin-top:0.45rem;">👤 Perfil, Objetivo y Macros</h2>
+        <p style="color:var(--text-muted); font-size:0.84rem; margin-top:0.3rem;">
+          Elige si quieres cálculo automático (Basal + Reloj/Pasos ± Ajuste) o introducir tus <b>gramos y calorías exactos de nutricionista</b>.
         </p>
       </div>
 
       <div class="grid-2">
         <div>
-          <label style="font-size:0.84rem;"><b>Sexo biológico:</b></label>
+          <label style="font-size:0.82rem;"><b>Sexo biológico:</b></label>
           <select id="ob-sex" onchange="previewOnboardingBMR()">
             <option value="M">Hombre</option>
             <option value="F">Mujer</option>
           </select>
         </div>
         <div>
-          <label style="font-size:0.84rem;"><b>Edad (años):</b></label>
+          <label style="font-size:0.82rem;"><b>Edad (años):</b></label>
           <input type="number" id="ob-age" placeholder="26" oninput="previewOnboardingBMR()">
         </div>
         <div>
-          <label style="font-size:0.84rem;"><b>Estatura (cm):</b></label>
+          <label style="font-size:0.82rem;"><b>Estatura (cm):</b></label>
           <input type="number" id="ob-height" placeholder="202" oninput="previewOnboardingBMR()">
         </div>
         <div>
-          <label style="font-size:0.84rem;"><b>Peso actual (kg):</b></label>
+          <label style="font-size:0.82rem;"><b>Peso actual (kg):</b></label>
           <input type="number" step="0.1" id="ob-weight" placeholder="108.0" oninput="previewOnboardingBMR()">
         </div>
         <div>
-          <label style="font-size:0.84rem;"><b>% Grasa estimado (opcional):</b></label>
+          <label style="font-size:0.82rem;"><b>% Grasa estimado (opc.):</b></label>
           <input type="number" step="0.5" id="ob-bf" placeholder="Ej: 15" oninput="previewOnboardingBMR()">
         </div>
         <div>
-          <label style="font-size:0.84rem;"><b>Basal manual (kcal, opcional):</b></label>
-          <input type="number" id="ob-manual-bmr" placeholder="Dejar vacío = automático" oninput="previewOnboardingBMR()">
+          <label style="font-size:0.82rem;"><b>Basal manual (opc.):</b></label>
+          <input type="number" id="ob-manual-bmr" placeholder="Vacío = automático" oninput="previewOnboardingBMR()">
         </div>
       </div>
 
-      <!-- SELECTOR MODO AUTOMÁTICO VS PERSONALIZADO / NUTRICIONISTA -->
-      <div style="border-top:1px solid var(--border); margin:0.65rem 0 0.85rem 0; padding-top:0.85rem;">
-        <label style="font-size:0.9rem;"><b>⚙️ Modo de Cálculo de Calorías y Macros:</b></label>
+      <div style="border-top:1px solid var(--border); margin:0.6rem 0 0.8rem 0; padding-top:0.8rem;">
+        <label style="font-size:0.88rem;"><b>⚙️ Modo de Cálculo de Calorías y Macros:</b></label>
         <select id="ob-macro-mode" onchange="toggleMacroModePanels()">
-          <option value="auto">⚡ Automático (Basal + Pasos/Entreno ± Ajuste objetivo)</option>
-          <option value="custom">📋 Personalizado / Nutricionista (Fijar gramos exactos de P, C, G y Kcal)</option>
+          <option value="auto">⚡ Automático (Basal + Reloj/Pasos ± Ajuste objetivo)</option>
+          <option value="custom">📋 Personalizado / Nutricionista (Fijar gramos exactos)</option>
         </select>
 
         <!-- PANEL MODO AUTOMÁTICO -->
         <div id="panel-mode-auto">
-          <label style="font-size:0.85rem;"><b>🎯 Objetivo Principal de Peso:</b></label>
+          <label style="font-size:0.84rem;"><b>🎯 Objetivo Principal de Peso:</b></label>
           <select id="ob-goal-type" onchange="syncGoalPreset()">
             <option value="lose_fast">Bajar grasa (-450 kcal/día)</option>
             <option value="lose_mild">Recomposición / Bajar grasa suave (-250 kcal/día)</option>
@@ -509,51 +568,51 @@
 
           <div class="grid-3">
             <div>
-              <label style="font-size:0.8rem;"><b>Ajuste kcal/día:</b></label>
+              <label style="font-size:0.78rem;"><b>Ajuste kcal/día:</b></label>
               <input type="number" id="ob-goal-adj" value="0" oninput="previewOnboardingBMR()">
             </div>
             <div>
-              <label style="font-size:0.8rem;"><b>Proteína (g/kg):</b></label>
+              <label style="font-size:0.78rem;"><b>Proteína (g/kg):</b></label>
               <input type="number" step="0.1" id="ob-prot-kg" value="2.1" oninput="previewOnboardingBMR()">
             </div>
             <div>
-              <label style="font-size:0.8rem;"><b>Grasa (g/kg):</b></label>
+              <label style="font-size:0.78rem;"><b>Grasa (g/kg):</b></label>
               <input type="number" step="0.1" id="ob-fat-kg" value="0.8" oninput="previewOnboardingBMR()">
             </div>
           </div>
 
-          <label style="font-size:0.8rem;"><b>O fijar calorías totales fijas manteniendo macros por g/kg (opcional):</b></label>
+          <label style="font-size:0.78rem;"><b>O fijar calorías totales fijas manteniendo macros por g/kg (opcional):</b></label>
           <input type="number" id="ob-fixed-kcal" placeholder="Dejar vacío para cálculo aditivo diario">
         </div>
 
         <!-- PANEL MODO PERSONALIZADO / NUTRICIONISTA -->
-        <div id="panel-mode-custom" class="hidden" style="background:var(--card-secondary); padding:0.9rem; border-radius:14px; border:1px solid var(--border); margin-top:0.4rem;">
-          <p style="font-size:0.82rem; color:var(--text-muted); margin:0 0 0.65rem 0;">
-            Introduce las cantidades exactas pautadas por tu nutricionista. Los pasos y entrenos no alterarán estos objetivos fijos.
+        <div id="panel-mode-custom" class="hidden" style="background:var(--card-secondary); padding:0.85rem; border-radius:14px; border:1px solid var(--border); margin-top:0.35rem;">
+          <p style="font-size:0.8rem; color:var(--text-muted); margin:0 0 0.6rem 0;">
+            Introduce las cantidades exactas pautadas por tu nutricionista.
           </p>
           <div class="grid-3">
             <div>
-              <label style="font-size:0.8rem;"><b>🥩 Proteína (g):</b></label>
+              <label style="font-size:0.78rem;"><b>🥩 Proteína (g):</b></label>
               <input type="number" id="ob-custom-p" placeholder="180" oninput="syncCustomKcalFromMacros()">
             </div>
             <div>
-              <label style="font-size:0.8rem;"><b>🍚 Carbos (g):</b></label>
+              <label style="font-size:0.78rem;"><b>🍚 Carbos (g):</b></label>
               <input type="number" id="ob-custom-c" placeholder="320" oninput="syncCustomKcalFromMacros()">
             </div>
             <div>
-              <label style="font-size:0.8rem;"><b>🥑 Grasas (g):</b></label>
+              <label style="font-size:0.78rem;"><b>🥑 Grasas (g):</b></label>
               <input type="number" id="ob-custom-g" placeholder="70" oninput="syncCustomKcalFromMacros()">
             </div>
           </div>
-          <label style="font-size:0.82rem;"><b>🔥 Calorías Objetivo Totales (kcal/día):</b></label>
+          <label style="font-size:0.8rem;"><b>🔥 Calorías Objetivo Totales (kcal/día):</b></label>
           <input type="number" id="ob-custom-kcal" placeholder="2630" oninput="previewOnboardingBMR()">
         </div>
       </div>
 
-      <div style="background:var(--card-secondary); padding:0.95rem; border-radius:14px; border:1px solid var(--border); margin:0.5rem 0 1rem 0; text-align:center;">
-        <span style="font-size:0.82rem; color:var(--text-muted);">Resumen de Referencia:</span>
-        <b style="display:block; font-size:1.32rem; color:var(--primary); margin-top:0.2rem;" id="ob-bmr-preview">2.250 kcal / día</b>
-        <span style="font-size:0.8rem; color:var(--text-muted);" id="ob-goal-preview">Objetivo por defecto: Mantenimiento (0 kcal)</span>
+      <div style="background:var(--card-secondary); padding:0.85rem; border-radius:14px; border:1px solid var(--border); margin:0.45rem 0 0.9rem 0; text-align:center;">
+        <span style="font-size:0.8rem; color:var(--text-muted);">Resumen de Referencia:</span>
+        <b style="display:block; font-size:1.25rem; color:var(--primary); margin-top:0.15rem;" id="ob-bmr-preview">2.250 kcal / día</b>
+        <span style="font-size:0.78rem; color:var(--text-muted);" id="ob-goal-preview">Objetivo por defecto: Mantenimiento (0 kcal)</span>
       </div>
 
       <button class="btn" onclick="saveUserProfile()">🚀 Guardar Perfil y Continuar</button>
@@ -563,46 +622,48 @@
   <!-- ==================== VISTA APP CONTENEDOR ==================== -->
   <div id="view-app" class="hidden">
 
-    <!-- Barra Global de Fecha Activa -->
-    <div class="card" style="padding:0.7rem 0.95rem; display:flex; justify-content:space-between; align-items:center; gap:0.5rem; margin-bottom:1rem;">
-      <button class="btn btn-secondary btn-sm" onclick="changeDate(-1)">◀ Ayer</button>
-      <div style="display:flex; align-items:center; gap:0.45rem;">
-        <i class="fa-regular fa-calendar" style="color:var(--primary);"></i>
-        <input type="date" id="active-date" style="margin:0; width:auto; padding:0.4rem 0.6rem; font-weight:700;" onchange="onDateChanged()">
+    <!-- Barra Compacta de Fecha Activa -->
+    <div class="date-pill-bar">
+      <button class="date-nav-arrow" onclick="changeDate(-1)" title="Día anterior">◀</button>
+      <div style="display:flex; align-items:center; gap:0.35rem;">
+        <i class="fa-regular fa-calendar" style="color:var(--primary); font-size:0.95rem;"></i>
+        <input type="date" id="active-date" class="date-center-input" onchange="onDateChanged()">
       </div>
-      <button class="btn btn-secondary btn-sm" onclick="changeDate(1)">Mañana ▶</button>
+      <button class="date-nav-arrow" onclick="changeDate(1)" title="Día siguiente">▶</button>
     </div>
 
     <!-- ==================== 1. PANTALLA PRINCIPAL (HOME) ==================== -->
     <div id="subview-home">
 
-      <!-- BALANCE NUTRICIONAL VISUAL (ARRIBA EN HOME) -->
+      <!-- BALANCE NUTRICIONAL VISUAL (ARRIBA EN HOME CON GASTO DEL RELOJ INTEGRADO) -->
       <div class="card card-hero">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.85rem; flex-wrap:wrap; gap:0.4rem;">
-          <h3>🥗 Balance Nutricional de Hoy</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem; flex-wrap:wrap; gap:0.35rem;">
+          <h3 style="font-size:1.05rem;">🥗 Balance Nutricional de Hoy</h3>
           <div style="display:flex; align-items:center; gap:0.35rem;">
             <span class="badge" id="home-kcal-pct" style="font-weight:800;">0%</span>
-            <button class="btn btn-secondary btn-sm" onclick="openOnboardingEdit()" title="Personalizar calorías y macros">🎯 Objetivo</button>
+            <button class="btn btn-secondary btn-sm" onclick="openWatchModal()" title="Sumar kcal del reloj hoy">⌚ +Reloj</button>
+            <button class="btn btn-secondary btn-sm" onclick="openOnboardingEdit()" title="Personalizar objetivo">🎯</button>
           </div>
         </div>
+        <div id="home-watch-note" style="font-size:0.76rem; color:var(--primary); font-weight:700; margin-bottom:0.6rem;"></div>
         <div id="home-macro-bars-container"></div>
       </div>
 
-      <!-- DOS PESTAÑAS GRANDES DE NUTRICIÓN Y ENTRENAMIENTO -->
+      <!-- DOS PESTAÑAS GRANDES LADO A LADO (NUTRICIÓN Y ENTRENAMIENTO) -->
       <div class="nav-grid-big">
         <div class="big-nav-btn nutri-card" onclick="showView('nutricion')">
           <div class="big-icon-pill">🥗</div>
-          <h3 style="font-size:1.28rem;">Nutrición</h3>
-          <p style="color:var(--text-muted); font-size:0.84rem; margin:0.35rem 0 0 0;" id="home-nutri-sub">
-            Registrar comidas, escáner y recetas
+          <h3 style="font-size:1.12rem;">Nutrición</h3>
+          <p style="color:var(--text-muted); font-size:0.77rem; margin:0.28rem 0 0 0;" id="home-nutri-sub">
+            Comidas, foto tabla y recetas
           </p>
         </div>
 
         <div class="big-nav-btn train-card" onclick="showView('entreno')">
           <div class="big-icon-pill">🏋️</div>
-          <h3 style="font-size:1.28rem;">Entrenamiento</h3>
-          <p style="color:var(--text-muted); font-size:0.84rem; margin:0.35rem 0 0 0;" id="home-entreno-sub">
-            0 sesiones hoy · Fuerza, Pista y Piscina
+          <h3 style="font-size:1.12rem;">Entrenamiento</h3>
+          <p style="color:var(--text-muted); font-size:0.77rem; margin:0.28rem 0 0 0;" id="home-entreno-sub">
+            0 sesiones hoy
           </p>
         </div>
       </div>
@@ -610,56 +671,55 @@
       <!-- ACCESOS DIRECTOS ESTADO Y AJUSTES -->
       <div class="nav-grid-small">
         <div class="small-nav-btn" onclick="showView('estado')">
-          <span style="font-size:1.35rem;">🩺</span>
-          <span>Estado y Gasto Diario</span>
+          <span style="font-size:1.2rem;">🩺</span>
+          <span>Estado y Gasto</span>
         </div>
 
         <div class="small-nav-btn" onclick="showView('ajustes')">
-          <span style="font-size:1.35rem;">⚙️</span>
-          <span>Ajustes, Gráficas y Excel</span>
+          <span style="font-size:1.2rem;">⚙️</span>
+          <span>Ajustes y Excel</span>
         </div>
       </div>
 
       <!-- RESUMEN SEMANAL DE CARGA -->
       <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; flex-wrap:wrap; gap:0.4rem;">
-          <h3>📈 Carga Real de la Semana</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.4rem;">
+          <h3 style="font-size:1rem;">📈 Carga Real de la Semana</h3>
           <span class="badge" id="home-week-range">Lun - Dom</span>
         </div>
 
         <div class="grid-4">
           <div class="metric-box">
-            <span>Tonelaje Completado</span>
+            <span>Tonelaje</span>
             <b id="wk-tonnage">0 kg</b>
-            <span id="wk-tonnage-diff" style="font-size:0.72rem;">--</span>
+            <span id="wk-tonnage-diff" style="font-size:0.7rem;">--</span>
           </div>
           <div class="metric-box">
-            <span>Carga Interna (sRPE)</span>
+            <span>Carga sRPE</span>
             <b id="wk-srpe">0 UA</b>
-            <span id="wk-sessions-count" style="font-size:0.72rem;">0 completadas</span>
+            <span id="wk-sessions-count" style="font-size:0.7rem;">0 completadas</span>
           </div>
           <div class="metric-box">
-            <span>Ratio Agudo:Crónico</span>
+            <span>Ratio ACWR</span>
             <b id="wk-acwr">1.00</b>
-            <span id="wk-acwr-status" style="font-size:0.72rem;">Zona óptima</span>
+            <span id="wk-acwr-status" style="font-size:0.7rem;">Zona óptima</span>
           </div>
           <div class="metric-box">
             <span>Peso Tendencia</span>
             <b id="wk-trend-weight">-- kg</b>
-            <span id="wk-avg-kcal" style="font-size:0.72rem;">Media: 0 kcal</span>
+            <span id="wk-avg-kcal" style="font-size:0.7rem;">Media: 0 kcal</span>
           </div>
         </div>
 
-        <div id="wk-muscle-volume-box" style="margin-top:0.85rem; padding-top:0.75rem; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; gap:0.4rem;"></div>
+        <div id="wk-muscle-volume-box" style="margin-top:0.75rem; padding-top:0.65rem; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; gap:0.38rem;"></div>
       </div>
     </div>
 
     <!-- ==================== 2. VISTA ESTADO Y GASTO DIARIO VISUAL ==================== -->
     <div id="subview-estado" class="hidden">
-      <h3 style="margin-bottom:0.85rem; font-size:1.22rem;">🩺 Mi Estado y Gasto Diario</h3>
+      <h3 style="margin-bottom:0.8rem; font-size:1.15rem;">🩺 Mi Estado y Gasto Diario</h3>
 
-      <!-- GRID DE TARJETAS INTERACTIVAS (PESO + SUEÑO) -->
-      <div class="grid-2 estado-grid-2" style="margin-bottom:0.85rem;">
+      <div class="grid-2 estado-grid-2" style="margin-bottom:0.8rem;">
         
         <!-- Tarjeta Peso -->
         <div class="estado-tile tile-green" style="border-top: 4px solid var(--primary);">
@@ -672,9 +732,9 @@
             <input type="number" step="0.1" id="rd-peso" class="stepper-input" value="108.0" oninput="recalculateAdditiveCalories()">
             <button type="button" class="stepper-btn" onclick="stepWeight(0.1)">+</button>
           </div>
-          <div style="margin-top:0.65rem; display:flex; align-items:center; justify-content:space-between; gap:0.4rem;">
-            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">💧 Agua bebida (L):</span>
-            <input type="number" step="0.25" id="rd-water" placeholder="3.0" style="width:85px; margin:0; padding:0.4rem; text-align:center; font-weight:700;">
+          <div style="margin-top:0.6rem; display:flex; align-items:center; justify-content:space-between; gap:0.4rem;">
+            <span style="font-size:0.78rem; color:var(--text-muted); font-weight:600;">💧 Agua bebida (L):</span>
+            <input type="number" step="0.25" id="rd-water" placeholder="3.0" style="width:82px; margin:0; padding:0.38rem; text-align:center; font-weight:700;">
           </div>
         </div>
 
@@ -692,16 +752,15 @@
             <button type="button" class="star-btn active" onclick="setSleepQuality(4)">⭐</button>
             <button type="button" class="star-btn" onclick="setSleepQuality(5)">⭐</button>
           </div>
-          <div style="margin-top:0.55rem; display:flex; align-items:center; justify-content:space-between; gap:0.4rem;">
-            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">⏱️ Horas dormidas:</span>
-            <input type="number" step="0.5" id="rd-sueno-h" placeholder="7.5" style="width:85px; margin:0; padding:0.4rem; text-align:center; font-weight:700;">
+          <div style="margin-top:0.5rem; display:flex; align-items:center; justify-content:space-between; gap:0.4rem;">
+            <span style="font-size:0.78rem; color:var(--text-muted); font-weight:600;">⏱️ Horas dormidas:</span>
+            <input type="number" step="0.5" id="rd-sueno-h" placeholder="7.5" style="width:82px; margin:0; padding:0.38rem; text-align:center; font-weight:700;">
           </div>
         </div>
 
       </div>
 
-      <!-- GRID DE TARJETAS INTERACTIVAS (ESTRÉS/FATIGA + ZONAS SENSIBLES) -->
-      <div class="grid-2 estado-grid-2" style="margin-bottom:0.85rem;">
+      <div class="grid-2 estado-grid-2" style="margin-bottom:0.8rem;">
 
         <!-- Tarjeta Estrés y Fatiga -->
         <div class="estado-tile tile-amber" style="border-top: 4px solid var(--warning);">
@@ -711,8 +770,8 @@
           <input type="hidden" id="rd-estres" value="2">
           <input type="hidden" id="rd-fatiga" value="2">
 
-          <div style="margin-bottom:0.65rem;">
-            <span style="font-size:0.76rem; color:var(--text-muted); font-weight:700; display:block; margin-bottom:0.3rem;">Nivel de Estrés:</span>
+          <div style="margin-bottom:0.6rem;">
+            <span style="font-size:0.74rem; color:var(--text-muted); font-weight:700; display:block; margin-bottom:0.28rem;">Nivel de Estrés:</span>
             <div class="pill-group" id="stress-pills">
               <div class="mood-pill active-green" onclick="setStressLevel(1)"><span>😌 Tranquilo</span><span>1/5</span></div>
               <div class="mood-pill" onclick="setStressLevel(3)"><span>😐 Normal / Moderado</span><span>3/5</span></div>
@@ -721,7 +780,7 @@
           </div>
 
           <div>
-            <span style="font-size:0.76rem; color:var(--text-muted); font-weight:700; display:block; margin-bottom:0.3rem;">Fatiga Muscular:</span>
+            <span style="font-size:0.74rem; color:var(--text-muted); font-weight:700; display:block; margin-bottom:0.28rem;">Fatiga Muscular:</span>
             <div class="pill-group" id="fatigue-pills">
               <div class="mood-pill active-green" onclick="setFatigueLevel(1)"><span>⚡ Fresco / Ligero</span><span>1/5</span></div>
               <div class="mood-pill" onclick="setFatigueLevel(3)"><span>🙂 Carga Normal</span><span>3/5</span></div>
@@ -734,7 +793,7 @@
         <div class="estado-tile tile-red" style="border-top: 4px solid var(--error);">
           <div class="estado-tile-header">
             <span class="estado-tile-title">🩺 Zonas Sensibles</span>
-            <span style="font-size:0.75rem; color:var(--text-muted);">0 = Sin molestia</span>
+            <span style="font-size:0.74rem; color:var(--text-muted);">0 = Sin molestia</span>
           </div>
 
           <div class="pain-slider-row">
@@ -766,7 +825,7 @@
 
       <!-- TARJETA GASTO ENERGÉTICO REAL (TDEE) -->
       <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.75rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.7rem;">
           <h3>⚡ Gasto Energético Diario (TDEE)</h3>
           <div style="display:flex; gap:0.35rem; align-items:center;">
             <span class="badge" style="font-weight:700;">Basal: <span id="calc-bmr-badge">2250</span> kcal</span>
@@ -777,159 +836,153 @@
 
         <div class="grid-2">
           <div>
-            <label style="font-size:0.83rem;"><b>👟 Pasos hoy (NEAT):</b></label>
+            <label style="font-size:0.81rem;"><b>👟 Pasos hoy (NEAT):</b></label>
             <input type="number" id="rd-steps" placeholder="Ej: 10000" oninput="recalculateAdditiveCalories()">
           </div>
           <div>
-            <label style="font-size:0.83rem;"><b>🔥 Kcal activas entreno:</b></label>
+            <label style="font-size:0.81rem;"><b>🔥 Kcal activas entreno:</b></label>
             <input type="number" id="rd-active-kcal" placeholder="Ej: 550 (se suma al basal)" oninput="recalculateAdditiveCalories()">
           </div>
           <div>
-            <label style="font-size:0.83rem;"><b>⌚ O Gasto Total Reloj:</b></label>
+            <label style="font-size:0.81rem;"><b>⌚ O Gasto Total Reloj:</b></label>
             <input type="number" id="rd-watch-total-kcal" placeholder="Opcional: sustituye suma" oninput="recalculateAdditiveCalories()">
           </div>
           <div>
-            <label style="font-size:0.83rem;"><b>🎯 Ajuste Objetivo (kcal):</b></label>
+            <label style="font-size:0.81rem;"><b>🎯 Ajuste Objetivo (kcal):</b></label>
             <input type="number" id="calc-objetivo" placeholder="0" oninput="recalculateAdditiveCalories()">
           </div>
         </div>
 
         <div class="info-note">
-          ℹ️ Los pasos son una estimación aproximada; si usas reloj deportivo, introduce directamente las <b>Kcal activas</b> o el <b>Gasto Total del Reloj</b>.
+          ℹ️ Los pasos son una estimación; si usas reloj deportivo, introduce las <b>Kcal activas</b> o el <b>Gasto Total del Reloj</b> y se sumará automáticamente a tu objetivo del día.
         </div>
 
-        <div style="background:var(--card-secondary); padding:1rem; border-radius:14px; border:1px solid var(--border);">
+        <div style="background:var(--card-secondary); padding:0.95rem; border-radius:14px; border:1px solid var(--border);">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem;">
-            <span style="font-size:0.9rem;">Gasto Total Estimado: <b id="calc-tdee-val">2250 kcal</b></span>
-            <span style="font-size:0.95rem;">Objetivo Hoy: <b style="font-size:1.3rem; color:var(--primary);" id="calc-result-kcal">2250 kcal</b></span>
+            <span style="font-size:0.88rem;">Gasto Total Estimado: <b id="calc-tdee-val">2250 kcal</b></span>
+            <span style="font-size:0.92rem;">Objetivo Hoy: <b style="font-size:1.25rem; color:var(--primary);" id="calc-result-kcal">2250 kcal</b></span>
           </div>
-          <p style="font-size:0.83rem; color:var(--text-muted); margin:0.35rem 0 0 0; font-weight:600;" id="calc-result-macros">
+          <p style="font-size:0.81rem; color:var(--text-muted); margin:0.32rem 0 0 0; font-weight:600;" id="calc-result-macros">
             P: 227g · C: 145g · G: 86g
           </p>
         </div>
 
-        <input type="text" id="rd-notas" placeholder="📝 Notas del día (sensaciones, estudio, recuperación...)" style="margin-top:0.75rem;">
+        <input type="text" id="rd-notas" placeholder="📝 Notas del día (sensaciones, estudio, recuperación...)" style="margin-top:0.7rem;">
 
-        <button class="btn" style="margin-top:0.35rem;" onclick="saveReadinessAndCalories()">💾 Guardar Estado y Calorías de Hoy</button>
+        <button class="btn" style="margin-top:0.3rem;" onclick="saveReadinessAndCalories()">💾 Guardar Estado y Calorías de Hoy</button>
       </div>
     </div>
 
-    <!-- ==================== 3. VISTA NUTRICIÓN ==================== -->
+    <!-- ==================== 3. VISTA NUTRICIÓN (EN VERDE HIITFIT + TOMAS EDITABLES) ==================== -->
     <div id="subview-nutricion" class="hidden">
 
       <div id="nutri-double-session-alert" class="alert-banner hidden">
-        ⚡ <b>Hoy tienes Doble Sesión completada:</b> Asegúrate de sumar las calorías de ambas sesiones en <i>Estado</i> para que tu objetivo suba acorde y prioriza carbohidratos alrededor de los entrenamientos.
+        ⚡ <b>Hoy tienes Doble Sesión completada:</b> Recuerda sumar las calorías de ambas sesiones en <i>⌚ +Reloj</i> para que tu objetivo suba acorde.
       </div>
 
-      <!-- BALANCE NUTRICIONAL CON BARRAS DE COLORES -->
+      <!-- BALANCE NUTRICIONAL CON BARRAS DE COLORES Y BOTÓN GASTO RELOJ -->
       <div class="card card-hero">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.85rem; flex-wrap:wrap; gap:0.4rem;">
-          <h3>🥗 Balance Nutricional</h3>
-          <div style="display:flex; align-items:center; gap:0.35rem;">
-            <span class="badge" id="nutri-kcal-badge" style="font-weight:800;">0 / 2600 kcal</span>
-            <button class="btn btn-secondary btn-sm" onclick="openOnboardingEdit()" title="Cambiar calorías y macros objetivo">🎯 Personalizar</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem; flex-wrap:wrap; gap:0.35rem;">
+          <h3 style="font-size:1.05rem;">🥗 Balance Nutricional</h3>
+          <div style="display:flex; align-items:center; gap:0.32rem; flex-wrap:wrap;">
+            <button class="btn btn-secondary btn-sm" onclick="openWatchModal()">⌚ +Kcal Reloj</button>
+            <button class="btn btn-secondary btn-sm" onclick="openMealSlotsManager()">✏️ Tomas</button>
+            <button class="btn btn-secondary btn-sm" onclick="openOnboardingEdit()">🎯 Objetivo</button>
           </div>
         </div>
+        <div id="nutri-watch-summary" style="font-size:0.77rem; color:var(--primary); font-weight:700; margin-bottom:0.65rem;"></div>
         <div id="nutri-macro-bars-container"></div>
       </div>
 
-      <!-- BUSCADOR Y REGISTRO DE ALIMENTOS -->
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.75rem;">
-          <h3>🔍 Añadir Alimento</h3>
-          <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
-            <button class="btn btn-info btn-sm" onclick="toggleBarcodeScanner()"><i class="fa-solid fa-barcode"></i> Escáner</button>
+      <!-- BUSCADOR, ESCÁNER, FOTO TABLA NUTRICIONAL Y RECETAS -->
+      <div class="card" id="food-adder-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.65rem;">
+          <h3 style="font-size:1rem;">🔍 Añadir Alimento</h3>
+          <div style="display:flex; gap:0.32rem; flex-wrap:wrap;">
+            <button class="btn btn-sm" onclick="document.getElementById('ocr-label-input').click()" title="Hacer foto a la tabla nutricional del envase">📷 Foto Tabla</button>
+            <button class="btn btn-info btn-sm" onclick="toggleBarcodeScanner()"><i class="fa-solid fa-barcode"></i> Código</button>
             <button class="btn btn-warning btn-sm" onclick="toggleRecipeModal()"><i class="fa-solid fa-blender"></i> + Receta</button>
-            <button class="btn btn-secondary btn-sm" onclick="cloneYesterdayFood()">📋 Clonar ayer</button>
+            <button class="btn btn-secondary btn-sm" onclick="cloneYesterdayFood()">📋 Ayer</button>
           </div>
         </div>
+
+        <input type="file" id="ocr-label-input" accept="image/*" capture="environment" class="hidden" onchange="scanNutritionLabelPhoto(event)">
+        <div id="ocr-status-box" class="info-note hidden" style="border-left-color:var(--primary); font-weight:600;"></div>
 
         <div id="scanner-box" class="hidden">
           <div id="scanner-reader"></div>
-          <button class="btn btn-danger btn-sm" style="width:100%; margin-bottom:0.75rem;" onclick="stopBarcodeScanner()">Cerrar Cámara</button>
+          <button class="btn btn-danger btn-sm" style="width:100%; margin-bottom:0.65rem;" onclick="stopBarcodeScanner()">Cerrar Cámara</button>
         </div>
 
-        <div style="display:flex; gap:0.4rem; align-items:center;">
-          <input type="text" id="food-search-query" placeholder="Buscar en tu biblioteca o en Open Food Facts..." style="margin:0;" oninput="filterLocalFoods()" onkeydown="if(event.key==='Enter') searchOpenFoodFactsText()">
-          <button class="btn btn-info btn-sm" style="height:42px; margin:0; white-space:nowrap;" onclick="searchOpenFoodFactsText()">🌐 Buscar Online</button>
+        <div style="display:flex; gap:0.38rem; align-items:center;">
+          <input type="text" id="food-search-query" placeholder="Buscar en biblioteca o en Open Food Facts..." style="margin:0;" oninput="filterLocalFoods()" onkeydown="if(event.key==='Enter') searchOpenFoodFactsText()">
+          <button class="btn btn-info btn-sm" style="height:40px; margin:0; white-space:nowrap;" onclick="searchOpenFoodFactsText()">🌐 Online</button>
         </div>
 
-        <div id="food-search-results" class="search-dropdown hidden" style="margin-top:0.4rem;"></div>
+        <div id="food-search-results" class="search-dropdown hidden" style="margin-top:0.38rem;"></div>
 
-        <div class="grid-3" style="margin-top:0.65rem;">
+        <div class="grid-3" style="margin-top:0.6rem;">
           <div>
-            <label style="font-size:0.8rem;"><b>Toma / Comida:</b></label>
-            <select id="food-meal-slot">
-              <option value="Desayuno">Desayuno</option>
-              <option value="Pre-entreno">Pre-entreno</option>
-              <option value="Post-entreno">Post-entreno</option>
-              <option value="Comida" selected>Comida</option>
-              <option value="Merienda">Merienda</option>
-              <option value="Cena">Cena</option>
-            </select>
+            <label style="font-size:0.78rem;"><b>Toma / Comida:</b></label>
+            <select id="food-meal-slot"></select>
           </div>
           <div>
-            <label style="font-size:0.8rem;"><b>Alimento:</b></label>
+            <label style="font-size:0.78rem;"><b>Alimento:</b></label>
             <input type="text" id="food-name" placeholder="Nombre">
           </div>
           <div>
-            <label style="font-size:0.8rem;"><b>Gramos (g):</b></label>
+            <label style="font-size:0.78rem;"><b>Gramos (g):</b></label>
             <div style="display:flex; gap:0.25rem;">
               <input type="number" id="food-grams" value="100" style="margin-bottom:0;">
-              <button class="btn btn-secondary btn-sm" style="padding:0 0.45rem;" onclick="convertCookedRaw()" title="Convertir peso cocinado a crudo">⚖️</button>
+              <button class="btn btn-secondary btn-sm" style="padding:0 0.42rem;" onclick="convertCookedRaw()" title="Convertir cocinado a crudo">⚖️</button>
             </div>
           </div>
         </div>
 
-        <p style="font-size:0.78rem; color:var(--text-muted); margin:0 0 0.3rem 0;">Macros por cada 100 g:</p>
+        <p style="font-size:0.76rem; color:var(--text-muted); margin:0 0 0.25rem 0;">Macros por cada 100 g:</p>
         <div class="grid-4">
-          <div><label style="font-size:0.76rem;">Kcal/100g</label><input type="number" step="0.1" id="food-kcal100" placeholder="0"></div>
-          <div><label style="font-size:0.76rem;">Prot/100g</label><input type="number" step="0.1" id="food-p100" placeholder="0"></div>
-          <div><label style="font-size:0.76rem;">Carb/100g</label><input type="number" step="0.1" id="food-c100" placeholder="0"></div>
-          <div><label style="font-size:0.76rem;">Grasa/100g</label><input type="number" step="0.1" id="food-g100" placeholder="0"></div>
+          <div><label style="font-size:0.74rem;">Kcal/100g</label><input type="number" step="0.1" id="food-kcal100" placeholder="0"></div>
+          <div><label style="font-size:0.74rem;">Prot/100g</label><input type="number" step="0.1" id="food-p100" placeholder="0"></div>
+          <div><label style="font-size:0.74rem;">Carb/100g</label><input type="number" step="0.1" id="food-c100" placeholder="0"></div>
+          <div><label style="font-size:0.74rem;">Grasa/100g</label><input type="number" step="0.1" id="food-g100" placeholder="0"></div>
         </div>
 
-        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-          <button class="btn" style="flex:2;" onclick="addFoodEntry(false)">➕ Añadir a Hoy</button>
-          <button class="btn btn-secondary" style="flex:1;" onclick="addFoodEntry(true)">💾 Guardar en Biblioteca</button>
+        <div style="display:flex; gap:0.45rem; flex-wrap:wrap;">
+          <button class="btn" style="flex:2;" onclick="addFoodEntry(false)">➕ Añadir a Toma</button>
+          <button class="btn btn-secondary" style="flex:1;" onclick="addFoodEntry(true)">💾 Guardar</button>
         </div>
       </div>
 
-      <!-- CREADOR DE RECETAS -->
+      <!-- CREADOR DE RECETAS MEJORADO -->
       <div id="recipe-creator-card" class="card hidden" style="border:2px solid var(--warning);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem;">
           <h3>🍲 Crear Receta Compuesta</h3>
           <button class="btn btn-secondary btn-sm" onclick="toggleRecipeModal()">✕</button>
         </div>
-        <label style="font-size:0.85rem;"><b>Nombre de la Receta:</b></label>
+        <label style="font-size:0.82rem;"><b>Nombre de la Receta:</b></label>
         <input type="text" id="rec-name" placeholder="Ej: Tupper Arroz con Pollo">
 
-        <div style="display:flex; gap:0.4rem; align-items:flex-end; margin-bottom:0.5rem;">
-          <div style="flex:2;">
-            <label style="font-size:0.8rem;">Ingrediente (de Biblioteca):</label>
-            <select id="rec-ing-select" style="margin-bottom:0;"></select>
-          </div>
-          <div style="flex:1;">
-            <label style="font-size:0.8rem;">Gramos:</label>
-            <input type="number" id="rec-ing-grams" value="100" style="margin-bottom:0;">
-          </div>
-          <button class="btn btn-sm" style="height:42px;" onclick="addIngredientToRecipe()">+</button>
+        <label style="font-size:0.8rem;"><b>Buscar ingrediente en biblioteca:</b></label>
+        <div style="display:flex; gap:0.38rem; align-items:center;">
+          <input type="text" id="rec-ing-search" placeholder="Escribe pollo, arroz, avena..." style="margin:0; flex:2;" oninput="filterRecipeIngredients()">
+          <input type="number" id="rec-ing-grams" value="100" placeholder="g" style="margin:0; width:78px; text-align:center;">
+          <button class="btn btn-sm" style="height:40px; margin:0;" onclick="addSelectedIngredientToRecipe()">+</button>
+        </div>
+        <div id="rec-search-results" class="search-dropdown hidden" style="margin-top:0.35rem;"></div>
+
+        <div id="rec-ingredients-list" style="margin:0.65rem 0;"></div>
+
+        <div id="rec-totals-preview" style="background:var(--card-secondary); padding:0.65rem; border-radius:11px; font-size:0.8rem; margin-bottom:0.65rem; border:1px solid var(--border);">
+          Peso crudo ingredientes: <b>0 g</b> · Total: <b>0 kcal</b>
         </div>
 
-        <div id="rec-ingredients-list" style="margin-bottom:0.75rem;"></div>
-
-        <label style="font-size:0.85rem;"><b>Peso total final cocinado (g):</b></label>
+        <label style="font-size:0.82rem;"><b>Peso total final cocinado (g):</b></label>
         <input type="number" id="rec-final-weight" placeholder="Ej: 850 (calcula macros por 100g cocinados)">
         <button class="btn btn-warning" onclick="saveRecipeToLibrary()">💾 Guardar Receta en Biblioteca</button>
       </div>
 
-      <!-- LISTA DE COMIDAS DEL DÍA -->
-      <div class="card">
-        <h3 style="margin-bottom:0.75rem;">📋 Comidas Registradas Hoy</h3>
-        <div id="today-food-list">
-          <p style="color:var(--text-muted); font-size:0.9rem;">Aún no has registrado comidas hoy.</p>
-        </div>
-      </div>
+      <!-- TARJETAS INDEPENDIENTES POR TOMA (DESAYUNO, ALMUERZO, COMIDA, MERIENDA, CENA...) -->
+      <div id="meal-slots-container"></div>
     </div>
 
     <!-- ==================== 4. VISTA ENTRENAMIENTO MULTISESIÓN ==================== -->
@@ -938,33 +991,33 @@
       <div id="double-session-banner" class="alert-banner hidden"></div>
 
       <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.45rem; margin-bottom:0.7rem;">
           <h3>🏋️ Sesiones del Día</h3>
-          <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+          <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
             <button class="btn btn-secondary btn-sm" onclick="toggleRestTimerWidget()">⏱️ Descanso</button>
-            <button class="btn btn-secondary btn-sm" onclick="cloneLastDayWorkouts()">📋 Clonar día anterior</button>
+            <button class="btn btn-secondary btn-sm" onclick="cloneLastDayWorkouts()">📋 Clonar anterior</button>
           </div>
         </div>
 
-        <div style="display:flex; gap:0.45rem; flex-wrap:wrap; align-items:center;">
-          <select id="new-session-modality" style="margin:0; flex:1; min-width:155px;">
+        <div style="display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center;">
+          <select id="new-session-modality" style="margin:0; flex:1; min-width:145px;">
             <option value="Fuerza">🏋️ Fuerza / Gimnasio</option>
             <option value="Pista">🏃 Pista / Series Carrera</option>
             <option value="Piscina">🏊 Natación / Piscina</option>
             <option value="Circuito">🔥 Circuito / Pruebas Específicas</option>
           </select>
-          <input type="time" id="new-session-time" value="08:30" style="margin:0; width:110px;">
-          <select id="new-session-status" style="margin:0; width:145px;">
+          <input type="time" id="new-session-time" value="08:30" style="margin:0; width:105px;">
+          <select id="new-session-status" style="margin:0; width:135px;">
             <option value="completed" selected>✅ Completada</option>
             <option value="planned">📋 Planificada</option>
           </select>
-          <button class="btn btn-sm" style="height:42px; margin:0;" onclick="createNewSessionBlock()">+ Añadir Sesión</button>
+          <button class="btn btn-sm" style="height:40px; margin:0;" onclick="createNewSessionBlock()">+ Añadir</button>
         </div>
       </div>
 
       <div id="sessions-list-container"></div>
 
-      <button class="btn" style="margin-bottom:2rem;" onclick="saveAllDaySessions(true)">💾 Guardar y Replegar Sesiones</button>
+      <button class="btn" style="margin-bottom:1.5rem;" onclick="saveAllDaySessions(true)">💾 Guardar y Replegar Sesiones</button>
     </div>
 
     <!-- ==================== 5. VISTA AJUSTES, PERFIL, GRÁFICAS Y EXCEL ==================== -->
@@ -972,57 +1025,129 @@
 
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem;">
-          <h3>👤 Mi Perfil, Objetivo de Peso y Macros</h3>
-          <button class="btn btn-sm" onclick="openOnboardingEdit()">✏️ Editar Perfil / Objetivo / Macros</button>
+          <h3>👤 Mi Perfil, Objetivo y Macros</h3>
+          <button class="btn btn-sm" onclick="openOnboardingEdit()">✏️ Editar Perfil / Objetivo</button>
         </div>
-        <p id="settings-profile-summary" style="font-size:0.86rem; color:var(--text-muted); margin-top:0.5rem; line-height:1.5;">---</p>
+        <p id="settings-profile-summary" style="font-size:0.84rem; color:var(--text-muted); margin-top:0.5rem; line-height:1.5;">---</p>
       </div>
 
       <div class="card">
-        <h3 style="margin-bottom:0.4rem;">📤 Exportar Mes a Excel (TSV)</h3>
-        <p style="color:var(--text-muted); font-size:0.86rem; margin-bottom:0.85rem;">
-          Copia los datos separados por tabulaciones y con comas decimales. Al pegar (<code>Ctrl+V</code>) en tu Excel o Google Sheets cada dato cae en su celda exacta.
+        <h3 style="margin-bottom:0.35rem;">📤 Exportar Mes a Excel (TSV)</h3>
+        <p style="color:var(--text-muted); font-size:0.84rem; margin-bottom:0.75rem;">
+          Copia los datos separados por tabulaciones y con comas decimales para pegarlos en Excel o Google Sheets.
         </p>
         <input type="month" id="export-month-picker">
         <div class="grid-2">
-          <button class="btn" onclick="copyMonthlyNutritionTSV()">📋 Copiar Nutrición y Estado</button>
-          <button class="btn btn-info" onclick="copyMonthlyWorkoutTSV()">📋 Copiar Entrenamientos</button>
+          <button class="btn" onclick="copyMonthlyNutritionTSV()">📋 Nutrición y Estado</button>
+          <button class="btn btn-info" onclick="copyMonthlyWorkoutTSV()">📋 Entrenamientos</button>
         </div>
-        <pre id="export-preview" class="hidden" style="background:var(--card-secondary); padding:0.75rem; border-radius:12px; font-size:0.75rem; overflow-x:auto; border:1px solid var(--border); margin-top:0.75rem;"></pre>
+        <pre id="export-preview" class="hidden" style="background:var(--card-secondary); padding:0.7rem; border-radius:12px; font-size:0.74rem; overflow-x:auto; border:1px solid var(--border); margin-top:0.7rem;"></pre>
       </div>
 
       <div class="card">
-        <h3 style="margin-bottom:0.75rem;">📊 Gráficas de Evolución</h3>
-        <div style="background:var(--card-secondary); padding:0.9rem; border-radius:14px; border:1px solid var(--border); margin-bottom:0.85rem;">
-          <p style="font-size:0.85rem; font-weight:700; margin-bottom:0.5rem;">⚖️ Evolución Peso Corporal (Últimos 14 registros)</p>
+        <h3 style="margin-bottom:0.7rem;">📊 Gráficas de Evolución</h3>
+        <div style="background:var(--card-secondary); padding:0.85rem; border-radius:14px; border:1px solid var(--border); margin-bottom:0.8rem;">
+          <p style="font-size:0.84rem; font-weight:700; margin-bottom:0.45rem;">⚖️ Evolución Peso Corporal (Últimos 14 registros)</p>
           <div id="chart-weight" style="height:105px; display:flex; align-items:flex-end; gap:6px; padding-top:15px; overflow-x:auto;"></div>
         </div>
 
-        <div style="background:var(--card-secondary); padding:0.9rem; border-radius:14px; border:1px solid var(--border);">
-          <p style="font-size:0.85rem; font-weight:700; margin-bottom:0.5rem;">🏆 Mejores Marcas Estimadas (e1RM Fuerza)</p>
-          <div id="chart-pr-list" style="font-size:0.88rem;"></div>
+        <div style="background:var(--card-secondary); padding:0.85rem; border-radius:14px; border:1px solid var(--border);">
+          <p style="font-size:0.84rem; font-weight:700; margin-bottom:0.45rem;">🏆 Mejores Marcas Estimadas (e1RM Fuerza)</p>
+          <div id="chart-pr-list" style="font-size:0.86rem;"></div>
         </div>
       </div>
 
       <div class="card">
-        <h3 style="margin-bottom:0.4rem;">⌚ Importar Archivos Suunto / Garmin (CSV)</h3>
-        <p style="color:var(--text-muted); font-size:0.86rem; margin-bottom:0.85rem;">
-          Sube un archivo <code>.csv</code> exportado desde Suunto App, Garmin Connect o Runalyze para volcar automáticamente fecha, calorías gastadas, sueño y sesiones.
+        <h3 style="margin-bottom:0.35rem;">⌚ Importar Archivos Suunto / Garmin (CSV)</h3>
+        <p style="color:var(--text-muted); font-size:0.84rem; margin-bottom:0.75rem;">
+          Sube un <code>.csv</code> exportado desde Suunto App, Garmin Connect o Runalyze para volcar fecha, calorías, sueño y sesiones.
         </p>
         <input type="file" id="wearable-csv-input" accept=".csv" onchange="importWearableCSV(event)">
       </div>
 
       <div class="card">
-        <h3 style="margin-bottom:0.65rem;">💾 Copia de Seguridad Completa (JSON)</h3>
+        <h3 style="margin-bottom:0.6rem;">💾 Copia de Seguridad Completa (JSON)</h3>
         <div class="grid-2">
-          <button class="btn btn-secondary" onclick="exportFullBackup()">⬇️ Descargar Backup JSON</button>
-          <button class="btn btn-secondary" onclick="document.getElementById('import-json-input').click()">⬆️ Restaurar Backup JSON</button>
+          <button class="btn btn-secondary" onclick="exportFullBackup()">⬇️ Descargar JSON</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('import-json-input').click()">⬆️ Restaurar JSON</button>
           <input type="file" id="import-json-input" class="hidden" accept=".json" onchange="importFullBackup(event)">
         </div>
       </div>
 
     </div>
 
+  </div>
+</div>
+
+<!-- BARRA INFERIOR DE ACCESOS RÁPIDOS -->
+<nav id="bottom-dock-nav" class="bottom-dock hidden">
+  <button class="dock-btn active" id="dock-home" onclick="showView('home')">
+    <i class="fa-solid fa-house"></i>
+    <span>Inicio</span>
+  </button>
+  <button class="dock-btn" id="dock-nutri" onclick="quickAddFoodAction()">
+    <i class="fa-solid fa-utensils"></i>
+    <span>+ Comida</span>
+  </button>
+  <button class="dock-btn dock-btn-center" id="dock-entreno" onclick="quickStartWorkoutAction()">
+    <i class="fa-solid fa-dumbbell"></i>
+    <span>+ Entreno</span>
+  </button>
+  <button class="dock-btn" id="dock-watch" onclick="openWatchModal()">
+    <i class="fa-solid fa-stopwatch-20"></i>
+    <span>+ Reloj</span>
+  </button>
+  <button class="dock-btn" id="dock-ajustes" onclick="showView('ajustes')">
+    <i class="fa-solid fa-sliders"></i>
+    <span>Ajustes</span>
+  </button>
+</nav>
+
+<!-- MODAL RÁPIDO GASTO CALÓRICO DEL RELOJ -->
+<div id="watch-kcal-modal" class="modal-backdrop hidden">
+  <div class="card" style="max-width:440px; width:100%; margin:0;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+      <h3>⌚ Gasto Calórico del Reloj Hoy</h3>
+      <button class="btn btn-secondary btn-sm" onclick="closeWatchModal()">✕</button>
+    </div>
+    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:0.75rem;">
+      Introduce las calorías que marca tu reloj hoy para sumarlas automáticamente a tu objetivo calórico en la portada y en Nutrición.
+    </p>
+    <label style="font-size:0.82rem;"><b>🔥 Kcal activas de entreno/actividad (se suman al basal):</b></label>
+    <input type="number" id="modal-watch-active" placeholder="Ej: 620">
+
+    <label style="font-size:0.82rem;"><b>⌚ O Gasto Total Diario del reloj (sustituye basal + pasos):</b></label>
+    <input type="number" id="modal-watch-total" placeholder="Opcional: ej. 3450">
+
+    <label style="font-size:0.82rem;"><b>👟 Pasos hoy (opcional si ya pones gasto total):</b></label>
+    <input type="number" id="modal-watch-steps" placeholder="Ej: 11500">
+
+    <div class="grid-2" style="margin-top:0.5rem;">
+      <button class="btn btn-secondary" onclick="closeWatchModal()">Cancelar</button>
+      <button class="btn" onclick="saveWatchModalKcal()">💾 Aplicar a Hoy</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR TOMAS DE COMIDA (DESAYUNO, ALMUERZO, PRE-ENTRENO...) -->
+<div id="meal-slots-modal" class="modal-backdrop hidden">
+  <div class="card" style="max-width:460px; width:100%; margin:0; max-height:88vh; overflow-y:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+      <h3>✏️ Personalizar Tomas del Día</h3>
+      <button class="btn btn-secondary btn-sm" onclick="closeMealSlotsManager()">✕</button>
+    </div>
+    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.75rem;">
+      Edita los nombres de tus tomas, añade nuevas (ej. <i>Pre-entreno</i>, <i>Post-entreno</i>) o elimina las que no uses.
+    </p>
+
+    <div id="meal-slots-edit-list" style="margin-bottom:0.75rem;"></div>
+
+    <div style="display:flex; gap:0.4rem; margin-bottom:0.75rem;">
+      <input type="text" id="new-meal-slot-name" placeholder="Nueva toma (ej: Pre-entreno)..." style="margin:0;">
+      <button class="btn btn-sm" style="height:40px; margin:0; white-space:nowrap;" onclick="addNewCustomMealSlot()">+ Añadir</button>
+    </div>
+
+    <button class="btn" onclick="saveCustomMealSlots()">💾 Guardar Tomas</button>
   </div>
 </div>
 
@@ -1036,16 +1161,13 @@
 
     <div style="background:var(--card-secondary); border:1px solid var(--border); border-radius:14px; padding:0.75rem; margin-bottom:0.75rem;">
       <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.4rem;">
-        <span style="font-size:0.82rem; font-weight:700;">💡 ¿Te lo ha pasado una IA o entrenador en otro formato?</span>
+        <span style="font-size:0.82rem; font-weight:700;">💡 ¿Te lo ha pasado una IA o entrenador?</span>
         <button class="btn btn-info btn-sm" onclick="copyAIPromptHelper()">🤖 Copiar Prompt para IA</button>
       </div>
       <p style="font-size:0.78rem; color:var(--text-muted); margin:0; line-height:1.45;">
         Pulsa el botón azul, pégalo en ChatGPT/Gemini junto a tu rutina y pega aquí su respuesta.<br>
-        <b>Ejemplos válidos Fuerza:</b><br>
-        <code>Press Banca: 4x8 @ 100kg RIR 1</code><br>
-        <code>Dominadas Lastradas: 3x10 @ 15kg RIR 2</code><br>
-        <b>Ejemplos válidos Pista / Piscina:</b><br>
-        <code>2x400m desc 2:00 + 4x200m desc 1:30</code>
+        <b>Fuerza:</b> <code>Press Banca: 4x8 @ 100kg RIR 1</code><br>
+        <b>Pista / Piscina:</b> <code>2x400m desc 2:00 + 4x200m desc 1:30</code>
       </p>
     </div>
 
@@ -1059,7 +1181,7 @@
 
 <!-- Cronómetro Flotante de Descanso -->
 <div id="rest-timer-widget" class="hidden">
-  <b id="rest-timer-display" style="font-size:1.1rem; min-width:52px; text-align:center;">01:30</b>
+  <b id="rest-timer-display" style="font-size:1.05rem; min-width:50px; text-align:center;">01:30</b>
   <button class="btn btn-secondary btn-sm" onclick="startRestTimer(60)">60"</button>
   <button class="btn btn-secondary btn-sm" onclick="startRestTimer(90)">90"</button>
   <button class="btn btn-secondary btn-sm" onclick="startRestTimer(180)">3'</button>
@@ -1085,6 +1207,8 @@ const auth = firebase.auth();
 const firestore = firebase.firestore();
 firestore.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 
+const DEFAULT_MEAL_SLOTS = ['Desayuno', 'Almuerzo', 'Comida', 'Merienda', 'Cena'];
+
 const BASE_FOODS_CATALOG = {
   "pechuga_cruda": { name: "Pechuga de pollo (cruda)", kcal: 110, p: 23, c: 0, g: 1.8 },
   "pechuga_pavo": { name: "Pechuga de pavo (cruda)", kcal: 107, p: 24, c: 0, g: 1.1 },
@@ -1105,6 +1229,7 @@ const BASE_FOODS_CATALOG = {
   "pan_integral": { name: "Pan integral / barra", kcal: 245, p: 9, c: 46, g: 2.2 },
   "leche_entera": { name: "Leche entera", kcal: 63, p: 3.1, c: 4.7, g: 3.5 },
   "leche_semi": { name: "Leche semidesnatada", kcal: 46, p: 3.2, c: 4.8, g: 1.6 },
+  "leche_desnatada": { name: "Leche desnatada sin lactosa", kcal: 33, p: 3.2, c: 4.7, g: 0.1 },
   "yogur_griego": { name: "Yogur griego natural", kcal: 115, p: 4.2, c: 4.5, g: 9.0 },
   "queso_fresco_batido": { name: "Queso fresco batido 0%", kcal: 46, p: 8.0, c: 3.5, g: 0.1 },
   "aceite_oliva": { name: "Aceite de oliva virgen extra", kcal: 884, p: 0, c: 0, g: 100 },
@@ -1139,6 +1264,7 @@ let currentUser = null;
 let loadedMonthsCache = new Set();
 let fitDB = {
   profile: null,
+  mealSlots: [...DEFAULT_MEAL_SLOTS],
   foodsLibrary: { ...BASE_FOODS_CATALOG },
   customExercises: [...DEFAULT_EXERCISES],
   days: {}
@@ -1147,6 +1273,8 @@ let fitDB = {
 let currentDaySessions = [];
 let pasteTargetSessionIdx = 0;
 let tempRecipeIngredients = [];
+let selectedRecipeFoodKey = null;
+let tempMealSlotsEdit = [];
 let html5QrCode = null;
 let restTimerInterval = null;
 let restSecondsLeft = 90;
@@ -1182,7 +1310,6 @@ auth.onAuthStateChanged(async (user) => {
   if (user) {
     currentUser = user;
     loadedMonthsCache.clear();
-    document.getElementById('user-email-badge').innerText = user.email;
     document.getElementById('header-user-info').classList.remove('hidden');
     document.getElementById('view-login').classList.add('hidden');
 
@@ -1194,12 +1321,14 @@ auth.onAuthStateChanged(async (user) => {
 
     if (!fitDB.profile || !fitDB.profile.completed) {
       document.getElementById('view-app').classList.add('hidden');
+      document.getElementById('bottom-dock-nav').classList.add('hidden');
       document.getElementById('view-onboarding').classList.remove('hidden');
       previewOnboardingBMR();
     } else {
       document.getElementById('view-onboarding').classList.add('hidden');
       document.getElementById('view-app').classList.remove('hidden');
-      populateRecipeSelect();
+      document.getElementById('bottom-dock-nav').classList.remove('hidden');
+      syncMealSlotsDropdown();
       onDateChanged();
       showView('home');
     }
@@ -1207,6 +1336,7 @@ auth.onAuthStateChanged(async (user) => {
     currentUser = null;
     document.getElementById('header-user-info').classList.add('hidden');
     document.getElementById('view-app').classList.add('hidden');
+    document.getElementById('bottom-dock-nav').classList.add('hidden');
     document.getElementById('view-onboarding').classList.add('hidden');
     document.getElementById('view-login').classList.remove('hidden');
   }
@@ -1245,12 +1375,14 @@ async function saveMetaDB() {
   if (!currentUser) return;
   localStorage.setItem(`hiitfit_v4_meta_${currentUser.uid}`, JSON.stringify({
     profile: fitDB.profile,
+    mealSlots: fitDB.mealSlots,
     foodsLibrary: fitDB.foodsLibrary,
     customExercises: fitDB.customExercises
   }));
   try {
     await firestore.collection('fit_users').doc(currentUser.uid).set({
       profile: fitDB.profile,
+      mealSlots: fitDB.mealSlots,
       foodsLibrary: fitDB.foodsLibrary,
       customExercises: fitDB.customExercises
     }, { merge: true });
@@ -1293,6 +1425,7 @@ async function loadMetaAndMonth(monthPrefix) {
   if (cachedMeta) {
     const parsed = JSON.parse(cachedMeta);
     fitDB.profile = parsed.profile || fitDB.profile;
+    fitDB.mealSlots = parsed.mealSlots && parsed.mealSlots.length ? parsed.mealSlots : [...DEFAULT_MEAL_SLOTS];
     fitDB.foodsLibrary = { ...BASE_FOODS_CATALOG, ...(parsed.foodsLibrary || {}) };
     fitDB.customExercises = parsed.customExercises || fitDB.customExercises;
   }
@@ -1302,6 +1435,7 @@ async function loadMetaAndMonth(monthPrefix) {
     if (userDoc.exists) {
       const data = userDoc.data();
       if (data.profile) fitDB.profile = data.profile;
+      if (data.mealSlots && data.mealSlots.length) fitDB.mealSlots = data.mealSlots;
       if (data.foodsLibrary) fitDB.foodsLibrary = { ...BASE_FOODS_CATALOG, ...data.foodsLibrary };
       if (data.customExercises) fitDB.customExercises = data.customExercises;
       saveMetaDB();
@@ -1419,6 +1553,7 @@ function openOnboardingEdit() {
   toggleMacroModePanels();
 
   document.getElementById('view-app').classList.add('hidden');
+  document.getElementById('bottom-dock-nav').classList.add('hidden');
   document.getElementById('view-onboarding').classList.remove('hidden');
 }
 
@@ -1439,7 +1574,7 @@ async function saveUserProfile() {
   const customKcal = parseInt(document.getElementById('ob-custom-kcal').value) || Math.round(customP * 4 + customC * 4 + customG * 9);
 
   if (mode === 'custom' && customKcal <= 0) {
-    return alert('Introduce tus gramos de Proteína, Carbohidratos, Grasas o Calorías totales en el modo personalizado.');
+    return alert('Introduce tus gramos de Proteína, Carbohidratos, Grasas o Calorías totales.');
   }
 
   fitDB.profile = {
@@ -1471,18 +1606,25 @@ async function saveUserProfile() {
 
   document.getElementById('view-onboarding').classList.add('hidden');
   document.getElementById('view-app').classList.remove('hidden');
-  populateRecipeSelect();
+  document.getElementById('bottom-dock-nav').classList.remove('hidden');
+  syncMealSlotsDropdown();
   onDateChanged();
   showView('home');
   showToast('✅ Perfil y objetivos guardados');
 }
 
-// ==================== NAVEGACIÓN ENTRE VISTAS ====================
+// ==================== NAVEGACIÓN ENTRE VISTAS Y BARRA INFERIOR ====================
 function showView(viewName) {
   ['home', 'estado', 'nutricion', 'entreno', 'ajustes'].forEach(v => {
     document.getElementById(`subview-${v}`).classList.add('hidden');
   });
   document.getElementById(`subview-${viewName}`).classList.remove('hidden');
+
+  document.querySelectorAll('.dock-btn').forEach(b => b.classList.remove('active'));
+  if (viewName === 'home') document.getElementById('dock-home')?.classList.add('active');
+  if (viewName === 'nutricion') document.getElementById('dock-nutri')?.classList.add('active');
+  if (viewName === 'entreno') document.getElementById('dock-entreno')?.classList.add('active');
+  if (viewName === 'ajustes') document.getElementById('dock-ajustes')?.classList.add('active');
 
   const btnBack = document.getElementById('btn-back');
   if (viewName === 'home') {
@@ -1497,7 +1639,7 @@ function showView(viewName) {
     const p = fitDB.profile || {};
     if (p.macroMode === 'custom') {
       document.getElementById('settings-profile-summary').innerHTML =
-        `<b>Modo Nutricionista / Personalizado Activo:</b> ${p.customKcal} kcal/día · P: ${p.customP}g · C: ${p.customC}g · G: ${p.customG}g<br>` +
+        `<b>Modo Nutricionista / Personalizado:</b> ${p.customKcal} kcal/día · P: ${p.customP}g · C: ${p.customC}g · G: ${p.customG}g<br>` +
         `<b>Datos base:</b> ${p.sex === 'F' ? 'Mujer' : 'Hombre'}, ${p.age} años, ${p.height} cm, ${p.weight} kg`;
     } else {
       document.getElementById('settings-profile-summary').innerHTML =
@@ -1508,6 +1650,58 @@ function showView(viewName) {
   }
   if (viewName === 'nutricion') renderNutritionDay();
   if (viewName === 'entreno') renderAllSessions();
+}
+
+function quickAddFoodAction(slotName = null) {
+  showView('nutricion');
+  if (slotName) {
+    document.getElementById('food-meal-slot').value = slotName;
+  }
+  const card = document.getElementById('food-adder-card');
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(() => document.getElementById('food-search-query').focus(), 250);
+}
+
+function quickStartWorkoutAction() {
+  showView('entreno');
+  if (currentDaySessions.length === 0) {
+    createNewSessionBlock();
+  }
+}
+
+function openWatchModal() {
+  const day = ensureDayRecord(getActiveDateKey());
+  document.getElementById('modal-watch-active').value = day.readiness.activeKcal || '';
+  document.getElementById('modal-watch-total').value = day.readiness.watchTotalKcal || '';
+  document.getElementById('modal-watch-steps').value = day.readiness.steps || '';
+  document.getElementById('watch-kcal-modal').classList.remove('hidden');
+}
+
+function closeWatchModal() {
+  document.getElementById('watch-kcal-modal').classList.add('hidden');
+}
+
+async function saveWatchModalKcal() {
+  const dateKey = getActiveDateKey();
+  const day = ensureDayRecord(dateKey);
+  const activeVal = parseInt(document.getElementById('modal-watch-active').value) || 0;
+  const totalVal = parseInt(document.getElementById('modal-watch-total').value) || 0;
+  const stepsVal = parseInt(document.getElementById('modal-watch-steps').value) || 0;
+
+  day.readiness.activeKcal = activeVal;
+  day.readiness.watchTotalKcal = totalVal;
+  day.readiness.steps = stepsVal;
+
+  document.getElementById('rd-active-kcal').value = activeVal || '';
+  document.getElementById('rd-watch-total-kcal').value = totalVal || '';
+  document.getElementById('rd-steps').value = stepsVal || '';
+
+  recalculateAdditiveCalories();
+  await saveMonthDB(dateKey.slice(0, 7));
+  closeWatchModal();
+  renderNutritionDay();
+  renderHomeSummary();
+  showToast('⌚ Gasto del reloj sumado a hoy');
 }
 
 async function changeDate(delta) {
@@ -1662,38 +1856,10 @@ function getDailyTargets(day) {
 
 function buildMacroBarsHTML(totKcal, totP, totC, totG, targets) {
   const items = [
-    {
-      label: '🔥 Calorías',
-      cur: Math.round(totKcal),
-      max: targets.targetKcal,
-      unit: 'kcal',
-      cls: 'fill-kcal',
-      lg: true
-    },
-    {
-      label: '🥩 Proteína',
-      cur: +totP.toFixed(1),
-      max: targets.targetP,
-      unit: 'g',
-      cls: 'fill-prot',
-      lg: false
-    },
-    {
-      label: '🍚 Carbohidratos',
-      cur: +totC.toFixed(1),
-      max: targets.targetC,
-      unit: 'g',
-      cls: 'fill-carb',
-      lg: false
-    },
-    {
-      label: '🥑 Grasas',
-      cur: +totG.toFixed(1),
-      max: targets.targetG,
-      unit: 'g',
-      cls: 'fill-fat',
-      lg: false
-    }
+    { label: '🔥 Calorías', cur: Math.round(totKcal), max: targets.targetKcal, unit: 'kcal', cls: 'fill-kcal', lg: true },
+    { label: '🥩 Proteína', cur: +totP.toFixed(1), max: targets.targetP, unit: 'g', cls: 'fill-prot', lg: false },
+    { label: '🍚 Carbohidratos', cur: +totC.toFixed(1), max: targets.targetC, unit: 'g', cls: 'fill-carb', lg: false },
+    { label: '🥑 Grasas', cur: +totG.toFixed(1), max: targets.targetG, unit: 'g', cls: 'fill-fat', lg: false }
   ];
 
   return items.map(it => {
@@ -1759,7 +1925,6 @@ function computeWeekMetrics(weekDates) {
 
     (day.sessions || []).forEach(sess => {
       if (sess.status === 'planned') return;
-
       sessionCount++;
       srpeLoad += (sess.duration || 0) * (sess.srpe || 0);
       if (sess.exercises) {
@@ -1786,6 +1951,19 @@ function computeWeekMetrics(weekDates) {
   return { tonnage, srpeLoad, sessionCount, avgKcal: kcalDays > 0 ? Math.round(kcalSum / kcalDays) : 0, muscleSets };
 }
 
+function getWatchSummaryLine(day) {
+  const r = day.readiness || {};
+  const bmr = computeBMR(fitDB.profile, r.peso);
+  if (r.watchTotalKcal > 0) {
+    return `⌚ Gasto total reloj aplicado: ${r.watchTotalKcal} kcal`;
+  }
+  if (r.activeKcal > 0 || r.steps > 0) {
+    const stepsEst = Math.round(((r.steps || 0) / 100) * 0.045 * (r.peso || 80));
+    return `⚡ Basal ${bmr} + Reloj ${r.activeKcal || 0} kcal${stepsEst > 0 ? ` + Pasos ~${stepsEst}` : ''} sumados al objetivo`;
+  }
+  return `⚡ Basal ${bmr} kcal · Pulsa "+Reloj" para sumar tu entreno`;
+}
+
 function renderHomeSummary() {
   const activeDate = getActiveDateKey();
   const day = ensureDayRecord(activeDate);
@@ -1799,17 +1977,20 @@ function renderHomeSummary() {
 
   const pct = Math.round((totKcal / Math.max(1, targets.targetKcal)) * 100);
   const pctBadge = document.getElementById('home-kcal-pct');
-  pctBadge.innerText = `${pct}% del objetivo`;
+  pctBadge.innerText = `${pct}%`;
   pctBadge.style.color = totKcal > targets.targetKcal ? 'var(--error)' : 'var(--primary)';
 
+  document.getElementById('home-watch-note').innerText = getWatchSummaryLine(day);
   document.getElementById('home-macro-bars-container').innerHTML = buildMacroBarsHTML(totKcal, totP, totC, totG, targets);
+
+  document.getElementById('home-nutri-sub').innerText = `${entries.length} alimentos · ${Math.round(totKcal)} kcal`;
 
   const allS = day.sessions || [];
   const plannedCount = allS.filter(s => s.status === 'planned').length;
   const compCount = allS.filter(s => s.status !== 'planned').length;
   document.getElementById('home-entreno-sub').innerText = allS.length > 0
-    ? `${compCount} completadas · ${plannedCount} planificadas`
-    : 'Sin sesiones hoy · Añadir o planificar';
+    ? `${compCount} hechas · ${plannedCount} planificadas`
+    : 'Sin sesiones hoy';
 
   const thisWeek = getWeekDates(activeDate);
   const prevMon = new Date(thisWeek[0]);
@@ -1850,8 +2031,8 @@ function renderHomeSummary() {
   const mBox = document.getElementById('wk-muscle-volume-box');
   const mKeys = Object.keys(cur.muscleSets);
   mBox.innerHTML = mKeys.length === 0
-    ? `<span style="font-size:0.78rem; color:var(--text-muted);">Series efectivas semanales por grupo muscular aparecerán aquí al completar fuerza.</span>`
-    : mKeys.map(m => `<span class="badge" style="font-size:0.76rem;"><b>${m}:</b> ${cur.muscleSets[m]} series</span>`).join('');
+    ? `<span style="font-size:0.76rem; color:var(--text-muted);">Series efectivas semanales por grupo muscular aparecerán aquí al completar fuerza.</span>`
+    : mKeys.map(m => `<span class="badge" style="font-size:0.74rem;"><b>${m}:</b> ${cur.muscleSets[m]} series</span>`).join('');
 }
 
 // ==================== CÁLCULO ENERGÉTICO ADITIVO / MODO NUTRICIONISTA ====================
@@ -1890,7 +2071,7 @@ function recalculateAdditiveCalories() {
   document.getElementById('calc-result-kcal').innerText = `${targetKcal} kcal`;
   document.getElementById('calc-result-macros').innerText =
     `Reparto objetivo: P ${protG}g · C ${carbG}g · G ${fatG}g` +
-    (p.fixedKcal ? ' (Calorías fijas en Perfil)' : (watchTotalKcal > 0 ? ' (Total Reloj)' : ` (Basal ${bmr} + Pasos ~${stepsKcalEst} + Entreno ${activeKcal})`));
+    (p.fixedKcal ? ' (Calorías fijas en Perfil)' : (watchTotalKcal > 0 ? ' (Total Reloj)' : ` (Basal ${bmr} + Pasos ~${stepsKcalEst} + Reloj ${activeKcal})`));
 
   day.nutrition.targetKcal = targetKcal;
 }
@@ -1921,6 +2102,104 @@ async function saveReadinessAndCalories() {
   showToast('💾 Estado y balance calórico guardados');
 }
 
+// ==================== GESTOR DE TOMAS EDITABLES (DESAYUNO, ALMUERZO...) ====================
+function syncMealSlotsDropdown() {
+  const slots = fitDB.mealSlots && fitDB.mealSlots.length ? fitDB.mealSlots : DEFAULT_MEAL_SLOTS;
+  const sel = document.getElementById('food-meal-slot');
+  const prevVal = sel.value;
+  sel.innerHTML = slots.map(s => `<option value="${s}">${s}</option>`).join('');
+  if (slots.includes(prevVal)) sel.value = prevVal;
+}
+
+function openMealSlotsManager() {
+  tempMealSlotsEdit = [...(fitDB.mealSlots || DEFAULT_MEAL_SLOTS)];
+  renderMealSlotsEditor();
+  document.getElementById('meal-slots-modal').classList.remove('hidden');
+}
+
+function closeMealSlotsManager() {
+  document.getElementById('meal-slots-modal').classList.add('hidden');
+}
+
+function renderMealSlotsEditor() {
+  const box = document.getElementById('meal-slots-edit-list');
+  box.innerHTML = tempMealSlotsEdit.map((slot, idx) => `
+    <div style="display:flex; gap:0.4rem; align-items:center; margin-bottom:0.45rem;">
+      <input type="text" value="${slot}" style="margin:0; flex:1;" onchange="tempMealSlotsEdit[${idx}] = this.value.trim() || 'Comida ${idx+1}'">
+      <button class="btn btn-danger btn-sm" onclick="if(tempMealSlotsEdit.length>1){tempMealSlotsEdit.splice(${idx},1); renderMealSlotsEditor();}" title="Eliminar toma">✕</button>
+    </div>
+  `).join('');
+}
+
+function addNewCustomMealSlot() {
+  const inp = document.getElementById('new-meal-slot-name');
+  const name = inp.value.trim();
+  if (!name) return;
+  tempMealSlotsEdit.push(name);
+  inp.value = '';
+  renderMealSlotsEditor();
+}
+
+async function saveCustomMealSlots() {
+  const cleaned = tempMealSlotsEdit.map(s => s.trim()).filter(Boolean);
+  if (cleaned.length === 0) return alert('Debes dejar al menos una toma.');
+  fitDB.mealSlots = cleaned;
+  await saveMetaDB();
+  syncMealSlotsDropdown();
+  closeMealSlotsManager();
+  renderNutritionDay();
+  showToast('✅ Tomas actualizadas');
+}
+
+// ==================== LECTOR DE ETIQUETAS NUTRICIONALES POR FOTO (OCR) ====================
+async function scanNutritionLabelPhoto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const statusBox = document.getElementById('ocr-status-box');
+  statusBox.innerText = '📷 Leyendo tabla nutricional de la foto... (puede tardar 3-5 segundos)';
+  statusBox.classList.remove('hidden');
+
+  try {
+    const result = await Tesseract.recognize(file, 'spa+eng');
+    const rawText = result.data.text || '';
+    const clean = rawText.replace(/\n/g, ' ').replace(/\s+/g, ' ');
+
+    const kcalMatch = clean.match(/(?:valor energ[eé]tico|energ[ií]a|energy|calor[ií]as)[^\d]{0,35}?(?:\d+\s*kJ\s*\/\s*)?(\d{1,4}(?:[.,]\d)?)\s*kcal/i)
+                   || clean.match(/(\d{1,4}(?:[.,]\d)?)\s*kcal/i);
+    const protMatch = clean.match(/(?:prote[ií]nas?|protein)[^\d]{0,25}?(\d{1,3}(?:[.,]\d{1,2})?)\s*g/i);
+    const carbMatch = clean.match(/(?:hidratos de carbono|carbohidratos|carbohydrate)[^\d]{0,25}?(\d{1,3}(?:[.,]\d{1,2})?)\s*g/i);
+    const fatMatch  = clean.match(/(?:grasas?|l[ií]pidos|fat)[^\d]{0,25}?(\d{1,3}(?:[.,]\d{1,2})?)\s*g/i);
+
+    const parseNum = m => m ? parseFloat(m[1].replace(',', '.')) : null;
+    const kcalVal = parseNum(kcalMatch);
+    const protVal = parseNum(protMatch);
+    const carbVal = parseNum(carbMatch);
+    const fatVal  = parseNum(fatMatch);
+
+    if (kcalVal === null && protVal === null && carbVal === null && fatVal === null) {
+      statusBox.innerText = '⚠️ No se pudieron leer números claros de la etiqueta. Acerca más la cámara con buena luz o rellénalos abajo.';
+      return;
+    }
+
+    if (kcalVal !== null) document.getElementById('food-kcal100').value = Math.round(kcalVal);
+    if (protVal !== null) document.getElementById('food-p100').value = protVal;
+    if (carbVal !== null) document.getElementById('food-c100').value = carbVal;
+    if (fatVal !== null)  document.getElementById('food-g100').value = fatVal;
+
+    if (!document.getElementById('food-name').value.trim()) {
+      document.getElementById('food-name').value = 'Producto escaneado';
+    }
+
+    statusBox.innerText = `✅ Tabla leída (por 100g): ${kcalVal ?? '?'} kcal · P: ${protVal ?? '?'}g · C: ${carbVal ?? '?'}g · G: ${fatVal ?? '?'}g. Revisa y ajusta tus gramos.`;
+    showToast('📷 Macros extraídos de la foto');
+  } catch (err) {
+    statusBox.innerText = '❌ Error al procesar la imagen. Inténtalo de nuevo.';
+  } finally {
+    event.target.value = '';
+  }
+}
+
 // ==================== NUTRICIÓN + API V2 OPEN FOOD FACTS + RECETAS ====================
 function convertCookedRaw() {
   const gramsInput = document.getElementById('food-grams');
@@ -1941,11 +2220,11 @@ function filterLocalFoods() {
     .filter(f => f.name.toLowerCase().includes(q));
 
   if (matches.length === 0) {
-    box.innerHTML = `<div class="search-item" style="color:var(--text-muted);">No está en tu biblioteca local. Pulsa <b>"🌐 Buscar Online"</b> para buscar en Open Food Facts.</div>`;
+    box.innerHTML = `<div class="search-item" style="color:var(--text-muted);">No está en tu biblioteca local. Pulsa <b>"🌐 Online"</b> o usa <b>"📷 Foto Tabla"</b>.</div>`;
   } else {
     box.innerHTML = matches.map(f => `
       <div class="search-item" onclick='selectFoodObject(${JSON.stringify(f).replace(/'/g, "&apos;")})'>
-        <b>${f.name}</b> <span style="color:var(--text-muted); font-size:0.8rem;">(${f.kcal} kcal | P:${f.p} C:${f.c} G:${f.g})</span>
+        <b>${f.name}</b> <span style="color:var(--text-muted); font-size:0.78rem;">(${f.kcal} kcal | P:${f.p} C:${f.c} G:${f.g})</span>
       </div>
     `).join('');
   }
@@ -1977,7 +2256,7 @@ async function searchOpenFoodFactsText() {
     }
 
     if (products.length === 0) {
-      box.innerHTML = `<div class="search-item">Sin resultados online para "${q}". Puedes rellenar sus macros abajo y guardarlo en tu biblioteca.</div>`;
+      box.innerHTML = `<div class="search-item">Sin resultados online para "${q}". Puedes usar <b>📷 Foto Tabla</b> o rellenar abajo.</div>`;
       return;
     }
 
@@ -1994,13 +2273,13 @@ async function searchOpenFoodFactsText() {
       return `
         <div class="search-item" onclick='selectFoodObject(${JSON.stringify(obj).replace(/'/g, "&apos;")})'>
           🌐 <b>${obj.name}</b><br>
-          <span style="color:var(--text-muted); font-size:0.8rem;">${obj.kcal} kcal | P:${obj.p}g C:${obj.c}g G:${obj.g}g (por 100g)</span>
+          <span style="color:var(--text-muted); font-size:0.78rem;">${obj.kcal} kcal | P:${obj.p}g C:${obj.c}g G:${obj.g}g (por 100g)</span>
         </div>
       `;
     }).join('');
   } catch (e) {
     clearTimeout(timeoutId);
-    box.innerHTML = `<div class="search-item" style="color:var(--error);">El servidor de Open Food Facts está saturado en este momento. Rellena los macros manualmente abajo y pulsa <b>"💾 Guardar en Biblioteca"</b> para tenerlo siempre disponible al instante.</div>`;
+    box.innerHTML = `<div class="search-item" style="color:var(--error);">El servidor de Open Food Facts está saturado ahora mismo. Haz una foto con <b>📷 Foto Tabla</b> o rellena los macros abajo.</div>`;
   }
 }
 
@@ -2026,7 +2305,6 @@ async function addFoodEntry(saveToLibrary) {
 
   if (saveToLibrary) {
     fitDB.foodsLibrary['food_' + Date.now()] = { name, kcal: kcal100, p: p100, c: c100, g: g100 };
-    populateRecipeSelect();
     await saveMetaDB();
   }
 
@@ -2086,43 +2364,57 @@ function renderNutritionDay() {
   else dblAlert.classList.add('hidden');
 
   let totKcal = 0, totP = 0, totC = 0, totG = 0;
-  const listEl = document.getElementById('today-food-list');
+  entries.forEach(item => {
+    totKcal += item.kcal; totP += item.p; totC += item.c; totG += item.g;
+  });
 
-  if (entries.length === 0) {
-    listEl.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">Aún no has registrado comidas hoy.</p>';
-  } else {
-    const slots = ['Desayuno', 'Pre-entreno', 'Post-entreno', 'Comida', 'Merienda', 'Cena'];
-    let html = '';
-    slots.forEach(slot => {
-      const slotItems = entries.map((item, idx) => ({ ...item, idx })).filter(x => (x.mealSlot || 'Comida') === slot);
-      if (slotItems.length > 0) {
-        const slotKcal = slotItems.reduce((a, b) => a + b.kcal, 0);
-        html += `<div style="margin-bottom:0.85rem;">
-          <div style="display:flex; justify-content:space-between; font-size:0.84rem; font-weight:800; color:var(--primary); margin-bottom:0.35rem;">
-            <span>🍽️ ${slot}</span><span>${slotKcal} kcal</span>
-          </div>`;
-        slotItems.forEach(item => {
-          totKcal += item.kcal; totP += item.p; totC += item.c; totG += item.g;
-          html += `
-            <div class="list-row">
-              <div>
-                <b>${item.name}</b> <span style="color:var(--text-muted); font-size:0.84rem;">(${item.grams}g)</span>
-                <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.15rem;">
-                  ${item.kcal} kcal · P: ${item.p}g · C: ${item.c}g · G: ${item.g}g
-                </div>
-              </div>
-              <button class="btn btn-danger btn-sm" onclick="removeFoodEntry(${item.idx})">✕</button>
-            </div>
-          `;
-        });
-        html += `</div>`;
-      }
-    });
-    listEl.innerHTML = html;
-  }
-
-  document.getElementById('nutri-kcal-badge').innerText = `${Math.round(totKcal)} / ${targets.targetKcal} kcal`;
+  document.getElementById('nutri-watch-summary').innerText = getWatchSummaryLine(day);
   document.getElementById('nutri-macro-bars-container').innerHTML = buildMacroBarsHTML(totKcal, totP, totC, totG, targets);
+
+  const activeSlots = [...(fitDB.mealSlots || DEFAULT_MEAL_SLOTS)];
+  entries.forEach(e => {
+    const s = e.mealSlot || 'Comida';
+    if (!activeSlots.includes(s)) activeSlots.push(s);
+  });
+
+  const slotsContainer = document.getElementById('meal-slots-container');
+  slotsContainer.innerHTML = activeSlots.map(slot => {
+    const slotItems = entries.map((item, idx) => ({ ...item, idx })).filter(x => (x.mealSlot || 'Comida') === slot);
+    const sKcal = Math.round(slotItems.reduce((a, b) => a + b.kcal, 0));
+    const sP = +slotItems.reduce((a, b) => a + b.p, 0).toFixed(1);
+    const sC = +slotItems.reduce((a, b) => a + b.c, 0).toFixed(1);
+    const sG = +slotItems.reduce((a, b) => a + b.g, 0).toFixed(1);
+
+    const itemsHTML = slotItems.length === 0
+      ? `<p style="font-size:0.78rem; color:var(--text-muted); margin:0.2rem 0;">Sin alimentos registrados</p>`
+      : slotItems.map(item => `
+          <div class="meal-food-item">
+            <div style="min-width:0;">
+              <b style="font-size:0.86rem;">${item.name}</b>
+              <div style="font-size:0.75rem; color:var(--text-muted);">
+                ${item.grams}g · <span style="color:var(--primary); font-weight:700;">${item.kcal} kcal</span> · P:${item.p}g C:${item.c}g G:${item.g}g
+              </div>
+            </div>
+            <button class="btn btn-danger btn-sm" style="padding:0.3rem 0.52rem;" onclick="removeFoodEntry(${item.idx})">✕</button>
+          </div>
+        `).join('');
+
+    return `
+      <div class="meal-slot-card">
+        <div class="meal-slot-top">
+          <div>
+            <h4 style="font-size:0.98rem;">🍽️ ${slot}</h4>
+            <span class="meal-slot-macros">P: ${sP}g · C: ${sC}g · G: ${sG}g</span>
+          </div>
+          <span class="badge" style="font-weight:800; color:var(--primary);">${sKcal} kcal</span>
+        </div>
+        ${itemsHTML}
+        <button class="meal-add-inline" onclick="quickAddFoodAction('${slot.replace(/'/g, "\\'")}')">
+          ➕ Añadir alimento a ${slot}
+        </button>
+      </div>
+    `;
+  }).join('');
 }
 
 function toggleBarcodeScanner() {
@@ -2161,41 +2453,89 @@ function stopBarcodeScanner() {
   if (html5QrCode) { html5QrCode.stop().catch(() => {}); html5QrCode = null; }
 }
 
-function populateRecipeSelect() {
-  const sel = document.getElementById('rec-ing-select');
-  sel.innerHTML = Object.keys(fitDB.foodsLibrary || {}).map(k => {
-    const f = fitDB.foodsLibrary[k];
-    return `<option value="${k}">${f.name}</option>`;
-  }).join('');
-}
-
+// ==================== CREADOR DE RECETAS MEJORADO ====================
 function toggleRecipeModal() {
   document.getElementById('recipe-creator-card').classList.toggle('hidden');
   tempRecipeIngredients = [];
+  selectedRecipeFoodKey = null;
+  document.getElementById('rec-ing-search').value = '';
+  document.getElementById('rec-search-results').classList.add('hidden');
   renderRecipeIngredients();
 }
 
-function addIngredientToRecipe() {
-  const key = document.getElementById('rec-ing-select').value;
+function filterRecipeIngredients() {
+  const q = document.getElementById('rec-ing-search').value.trim().toLowerCase();
+  const box = document.getElementById('rec-search-results');
+  selectedRecipeFoodKey = null;
+  if (!q) { box.classList.add('hidden'); return; }
+
+  const matches = Object.keys(fitDB.foodsLibrary || {})
+    .map(k => ({ key: k, ...fitDB.foodsLibrary[k] }))
+    .filter(f => f.name.toLowerCase().includes(q));
+
+  if (matches.length === 0) {
+    box.innerHTML = `<div class="search-item" style="color:var(--text-muted);">No encontrado en biblioteca. Guárdalo primero desde "Añadir Alimento".</div>`;
+  } else {
+    box.innerHTML = matches.map(f => `
+      <div class="search-item" onclick="pickRecipeIngredient('${f.key}')">
+        <b>${f.name}</b> <span style="color:var(--text-muted); font-size:0.78rem;">(${f.kcal} kcal/100g · P:${f.p} C:${f.c} G:${f.g})</span>
+      </div>
+    `).join('');
+  }
+  box.classList.remove('hidden');
+}
+
+function pickRecipeIngredient(key) {
+  selectedRecipeFoodKey = key;
+  document.getElementById('rec-ing-search').value = fitDB.foodsLibrary[key].name;
+  document.getElementById('rec-search-results').classList.add('hidden');
+  addSelectedIngredientToRecipe();
+}
+
+function addSelectedIngredientToRecipe() {
+  let key = selectedRecipeFoodKey;
+  if (!key) {
+    const q = document.getElementById('rec-ing-search').value.trim().toLowerCase();
+    key = Object.keys(fitDB.foodsLibrary || {}).find(k => fitDB.foodsLibrary[k].name.toLowerCase().includes(q));
+  }
   const grams = parseFloat(document.getElementById('rec-ing-grams').value) || 0;
-  if (!key || grams <= 0) return;
+  if (!key || grams <= 0) return alert('Selecciona un ingrediente válido e indica los gramos.');
+
   tempRecipeIngredients.push({ ...fitDB.foodsLibrary[key], grams });
+  selectedRecipeFoodKey = null;
+  document.getElementById('rec-ing-search').value = '';
   renderRecipeIngredients();
 }
 
 function renderRecipeIngredients() {
-  document.getElementById('rec-ingredients-list').innerHTML = tempRecipeIngredients.map((ing, i) => `
-    <div class="list-row" style="padding:0.4rem 0.7rem;">
-      <span style="font-size:0.84rem;">${ing.name} (${ing.grams}g)</span>
-      <button class="btn btn-danger btn-sm" onclick="tempRecipeIngredients.splice(${i},1); renderRecipeIngredients();">✕</button>
-    </div>
-  `).join('');
+  let rawWeight = 0, sK = 0, sP = 0, sC = 0, sG = 0;
+  document.getElementById('rec-ingredients-list').innerHTML = tempRecipeIngredients.map((ing, i) => {
+    const r = ing.grams / 100;
+    const ik = Math.round(ing.kcal * r);
+    const ip = +(ing.p * r).toFixed(1);
+    const ic = +(ing.c * r).toFixed(1);
+    const ig = +(ing.g * r).toFixed(1);
+    rawWeight += ing.grams;
+    sK += ik; sP += ip; sC += ic; sG += ig;
+    return `
+      <div class="list-row" style="padding:0.5rem 0.72rem;">
+        <div>
+          <b style="font-size:0.84rem;">${ing.name} · ${ing.grams}g</b>
+          <div style="font-size:0.74rem; color:var(--text-muted);">${ik} kcal · P:${ip}g C:${ic}g G:${ig}g</div>
+        </div>
+        <button class="btn btn-danger btn-sm" style="padding:0.3rem 0.5rem;" onclick="tempRecipeIngredients.splice(${i},1); renderRecipeIngredients();">✕</button>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('rec-totals-preview').innerHTML =
+    `Peso ingredientes: <b>${rawWeight} g</b> · Total receta: <b>${Math.round(sK)} kcal</b> (P:${sP.toFixed(1)}g C:${sC.toFixed(1)}g G:${sG.toFixed(1)}g)`;
 }
 
 async function saveRecipeToLibrary() {
   const recName = document.getElementById('rec-name').value.trim();
   const finalWeight = parseFloat(document.getElementById('rec-final-weight').value) || 0;
-  if (!recName || tempRecipeIngredients.length === 0 || finalWeight <= 0) return alert('Completa todos los campos.');
+  if (!recName || tempRecipeIngredients.length === 0 || finalWeight <= 0) return alert('Completa el nombre, ingredientes y peso final.');
 
   let sK = 0, sP = 0, sC = 0, sG = 0;
   tempRecipeIngredients.forEach(ing => {
@@ -2212,8 +2552,8 @@ async function saveRecipeToLibrary() {
     g: +(sG * f100).toFixed(1)
   };
   await saveMetaDB();
-  populateRecipeSelect(); toggleRecipeModal();
-  showToast('🍲 Receta guardada');
+  toggleRecipeModal();
+  showToast('🍲 Receta guardada en tu biblioteca');
 }
 
 // ==================== ENTRENAMIENTO MULTISESIÓN + PROMPT IA + PARSER FLEXIBLE ====================
@@ -2290,7 +2630,7 @@ function filterExercisesBilingual(sessIdx, position = 'top') {
 
   let html = localMatches.map(ex => `
     <div class="search-item" onclick="addExerciseToSession(${sessIdx}, '${ex.es.replace(/'/g, "\\'")}', '${ex.muscle}', '${position}')">
-      <b>${ex.es}</b> <span style="color:var(--text-muted); font-size:0.8rem;">/ ${ex.en} · [${ex.muscle}]</span>
+      <b>${ex.es}</b> <span style="color:var(--text-muted); font-size:0.78rem;">/ ${ex.en} · [${ex.muscle}]</span>
     </div>
   `).join('');
 
@@ -2323,7 +2663,7 @@ async function searchWgerExercises(sessIdx, query, position = 'top') {
       const cat = item.data?.category || 'General';
       return `
         <div class="search-item" onclick="addExerciseToSession(${sessIdx}, '${name.replace(/'/g, "\\'")}', '${cat}', '${position}')">
-          🌐 <b>${name}</b> <span style="color:var(--text-muted); font-size:0.8rem;">[${cat}]</span>
+          🌐 <b>${name}</b> <span style="color:var(--text-muted); font-size:0.78rem;">[${cat}]</span>
         </div>
       `;
     }).join('');
@@ -2442,7 +2782,7 @@ function parseAndImportRoutineText() {
         addedEx++;
       }
     });
-    if (addedEx === 0) return alert('No se detectó ningún formato tipo "Press Banca: 4x8 @ 100kg RIR 1". Usa el botón "Copiar Prompt para IA" para convertir cualquier texto.');
+    if (addedEx === 0) return alert('No se detectó ningún formato tipo "Press Banca: 4x8 @ 100kg RIR 1". Usa el botón "Copiar Prompt para IA".');
     showToast(`⚡ Importados ${addedEx} ejercicios`);
   } else {
     let addedBlocks = 0;
@@ -2542,7 +2882,7 @@ function renderExerciseSearchBarHTML(sIdx, position) {
     <div style="position:relative; margin:0.65rem 0;">
       <div style="display:flex; gap:0.4rem;">
         <input type="text" id="ex-search-${position}-${sIdx}" placeholder="Añadir ejercicio en ES/EN (ej: Bench Press, Dominadas)..." style="margin:0;" oninput="filterExercisesBilingual(${sIdx}, '${position}')">
-        <button class="btn btn-sm" style="height:42px; margin:0; white-space:nowrap;" onclick="addExerciseToSession(${sIdx}, null, 'General', '${position}')">+ Añadir</button>
+        <button class="btn btn-sm" style="height:40px; margin:0; white-space:nowrap;" onclick="addExerciseToSession(${sIdx}, null, 'General', '${position}')">+ Añadir</button>
       </div>
       <div id="ex-drop-${position}-${sIdx}" class="search-dropdown hidden" style="margin-top:0.35rem;"></div>
     </div>
@@ -2555,7 +2895,7 @@ function renderAllSessions() {
   container.innerHTML = '';
 
   if (currentDaySessions.length === 0) {
-    container.innerHTML = `<div class="card"><p style="color:var(--text-muted); text-align:center;">No hay sesiones registradas hoy. Selecciona arriba la modalidad y pulsa <b>"+ Añadir Sesión"</b>.</p></div>`;
+    container.innerHTML = `<div class="card"><p style="color:var(--text-muted); text-align:center;">No hay sesiones registradas hoy. Selecciona arriba la modalidad y pulsa <b>"+ Añadir"</b>.</p></div>`;
     return;
   }
 
@@ -2580,7 +2920,7 @@ function renderAllSessions() {
           ex.sets.forEach((st, stIdx) => {
             setsRows += `
               <div class="set-row ${st.done ? 'set-done' : ''}">
-                <span class="badge" style="text-align:center; padding:0.3rem 0;">${stIdx + 1}</span>
+                <span class="badge" style="text-align:center; padding:0.28rem 0;">${stIdx + 1}</span>
                 <input type="number" step="0.5" value="${st.kg}" onchange="currentDaySessions[${sIdx}].exercises[${exIdx}].sets[${stIdx}].kg = parseFloat(this.value)||0">
                 <input type="number" value="${st.reps}" onchange="currentDaySessions[${sIdx}].exercises[${exIdx}].sets[${stIdx}].reps = parseInt(this.value)||0">
                 <input type="number" step="0.5" value="${st.rir}" onchange="currentDaySessions[${sIdx}].exercises[${exIdx}].sets[${stIdx}].rir = parseFloat(this.value)||0">
@@ -2592,11 +2932,11 @@ function renderAllSessions() {
           });
 
           innerHtml += `
-            <div style="background:var(--card-secondary); padding:0.85rem; border-radius:14px; border:1px solid var(--border); margin-bottom:0.75rem;">
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.4rem; margin-bottom:0.5rem;">
+            <div style="background:var(--card-secondary); padding:0.8rem; border-radius:14px; border:1px solid var(--border); margin-bottom:0.7rem;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.4rem; margin-bottom:0.45rem;">
                 <div>
                   <b>${ex.name}</b>
-                  <div style="font-size:0.74rem; color:var(--primary);">${histInfo}</div>
+                  <div style="font-size:0.73rem; color:var(--primary);">${histInfo}</div>
                 </div>
                 <div style="display:flex; gap:0.3rem;">
                   <button class="btn btn-secondary btn-sm" onclick="calcPlatesHelper(prompt('Peso total barra (kg):','100'))" title="Calculadora discos barra 20kg">💿</button>
@@ -2624,24 +2964,24 @@ function renderAllSessions() {
             const pace = calculatePaceStr(rep.dist, rep.time, isSwim);
             repsHtml += `
               <div class="track-rep-row">
-                <span class="badge" style="text-align:center; padding:0.3rem 0;">${rIdx + 1}</span>
+                <span class="badge" style="text-align:center; padding:0.28rem 0;">${rIdx + 1}</span>
                 <input type="number" value="${rep.dist}" onchange="currentDaySessions[${sIdx}].trackBlocks[${bIdx}].reps[${rIdx}].dist = parseInt(this.value)||0; renderAllSessions();">
                 <input type="text" value="${rep.rest}" placeholder="1:30" onchange="currentDaySessions[${sIdx}].trackBlocks[${bIdx}].reps[${rIdx}].rest = this.value">
                 <input type="text" value="${rep.time}" placeholder="0:52.4" onchange="currentDaySessions[${sIdx}].trackBlocks[${bIdx}].reps[${rIdx}].time = this.value; renderAllSessions();">
-                <span style="font-size:0.75rem; font-weight:700; text-align:center; color:var(--primary);">${pace}</span>
+                <span style="font-size:0.74rem; font-weight:700; text-align:center; color:var(--primary);">${pace}</span>
                 <button class="btn btn-danger btn-sm" style="padding:0.35rem;" onclick="currentDaySessions[${sIdx}].trackBlocks[${bIdx}].reps.splice(${rIdx},1); renderAllSessions();">✕</button>
               </div>
             `;
           });
 
           innerHtml += `
-            <div style="background:var(--card-secondary); padding:0.85rem; border-radius:14px; border:1px solid var(--border); margin-bottom:0.75rem;">
-              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.5rem;">
-                <input type="text" value="${blk.name}" style="margin:0; width:150px; font-weight:700; padding:0.35rem 0.5rem;" onchange="currentDaySessions[${sIdx}].trackBlocks[${bIdx}].name = this.value">
+            <div style="background:var(--card-secondary); padding:0.8rem; border-radius:14px; border:1px solid var(--border); margin-bottom:0.7rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.45rem;">
+                <input type="text" value="${blk.name}" style="margin:0; width:145px; font-weight:700; padding:0.35rem 0.5rem;" onchange="currentDaySessions[${sIdx}].trackBlocks[${bIdx}].name = this.value">
                 <div style="display:flex; align-items:center; gap:0.35rem;">
-                  <span style="font-size:0.78rem;">Macropausa:</span>
-                  <input type="text" value="${blk.macroRest}" style="margin:0; width:65px; padding:0.35rem; text-align:center;" onchange="currentDaySessions[${sIdx}].trackBlocks[${bIdx}].macroRest = this.value">
-                  <button class="btn btn-info btn-sm" onclick="generateBatchTrackReps(${sIdx}, ${bIdx})" title="Generar bloque rápido (ej: 4x300m)">⚡ Lote</button>
+                  <span style="font-size:0.76rem;">Macropausa:</span>
+                  <input type="text" value="${blk.macroRest}" style="margin:0; width:62px; padding:0.35rem; text-align:center;" onchange="currentDaySessions[${sIdx}].trackBlocks[${bIdx}].macroRest = this.value">
+                  <button class="btn btn-info btn-sm" onclick="generateBatchTrackReps(${sIdx}, ${bIdx})" title="Generar bloque rápido">⚡ Lote</button>
                   <button class="btn btn-danger btn-sm" onclick="currentDaySessions[${sIdx}].trackBlocks.splice(${bIdx},1); renderAllSessions();">✕</button>
                 </div>
               </div>
@@ -2655,14 +2995,14 @@ function renderAllSessions() {
       }
 
       bodyHtml = `
-        <div style="margin-top:0.85rem; padding-top:0.85rem; border-top:1px solid var(--border);">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.65rem;">
-            <div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap;">
-              <select style="margin:0; width:auto; padding:0.38rem 0.55rem; font-weight:600;" onchange="currentDaySessions[${sIdx}].status = this.value; renderAllSessions();">
+        <div style="margin-top:0.8rem; padding-top:0.8rem; border-top:1px solid var(--border);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.6rem;">
+            <div style="display:flex; gap:0.38rem; align-items:center; flex-wrap:wrap;">
+              <select style="margin:0; width:auto; padding:0.36rem 0.52rem; font-weight:600;" onchange="currentDaySessions[${sIdx}].status = this.value; renderAllSessions();">
                 <option value="completed" ${!isPlanned ? 'selected' : ''}>✅ Completada</option>
-                <option value="planned" ${isPlanned ? 'selected' : ''}>📋 Planificada (Pendiente)</option>
+                <option value="planned" ${isPlanned ? 'selected' : ''}>📋 Planificada</option>
               </select>
-              <input type="time" value="${sess.startTime || '08:30'}" style="margin:0; width:105px; padding:0.35rem 0.45rem;" onchange="currentDaySessions[${sIdx}].startTime = this.value; checkDoubleSessionAlert();">
+              <input type="time" value="${sess.startTime || '08:30'}" style="margin:0; width:100px; padding:0.35rem 0.42rem;" onchange="currentDaySessions[${sIdx}].startTime = this.value; checkDoubleSessionAlert();">
             </div>
             <div style="display:flex; gap:0.35rem;">
               <button class="btn btn-info btn-sm" onclick="openPasteRoutineModal(${sIdx})">📋 Pegar Rutina</button>
@@ -2670,19 +3010,19 @@ function renderAllSessions() {
             </div>
           </div>
 
-          <div class="grid-2" style="margin-bottom:0.5rem;">
+          <div class="grid-2" style="margin-bottom:0.45rem;">
             <div>
-              <label style="font-size:0.78rem;"><b>Duración (min):</b></label>
+              <label style="font-size:0.76rem;"><b>Duración (min):</b></label>
               <input type="number" value="${sess.duration || 60}" onchange="currentDaySessions[${sIdx}].duration = parseInt(this.value)||0">
             </div>
             <div>
-              <label style="font-size:0.78rem;"><b>sRPE Sesión (1-10):</b></label>
+              <label style="font-size:0.76rem;"><b>sRPE Sesión (1-10):</b></label>
               <input type="number" min="1" max="10" value="${sess.srpe || 8}" onchange="currentDaySessions[${sIdx}].srpe = parseFloat(this.value)||0">
             </div>
           </div>
 
           ${innerHtml}
-          <input type="text" value="${sess.notes || ''}" placeholder="Notas post-sesión (sensaciones, agarre, fatiga...)" style="margin-top:0.65rem; margin-bottom:0.65rem;" onchange="currentDaySessions[${sIdx}].notes = this.value">
+          <input type="text" value="${sess.notes || ''}" placeholder="Notas post-sesión (sensaciones, agarre, fatiga...)" style="margin-top:0.6rem; margin-bottom:0.6rem;" onchange="currentDaySessions[${sIdx}].notes = this.value">
 
           <button class="btn btn-sm" style="width:100%;" onclick="saveSingleSessionAndCollapse(${sIdx})">✅ Guardar y Replegar Esta Sesión</button>
         </div>
@@ -2692,14 +3032,14 @@ function renderAllSessions() {
     container.innerHTML += `
       <div class="card" style="border-left: 4px solid ${isPlanned ? 'var(--warning)' : 'var(--primary)'};">
         <div class="session-accordion-header" onclick="toggleSessionCollapse(${sIdx})">
-          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap;">
             <span style="font-weight:800; color:var(--primary);">${sess.collapsed ? '▶' : '▼'}</span>
             <span class="badge" style="background:${isPlanned ? 'var(--warning)' : 'var(--primary)'}; color:${isPlanned ? '#000' : '#fff'}; font-weight:700;">
-              ${isPlanned ? '📋 Planificada' : '✅ Completada'} · Sesión #${sIdx + 1} (${sess.modality})
+              ${isPlanned ? '📋 Planificada' : '✅ Completada'} · #${sIdx + 1} (${sess.modality})
             </span>
-            <span style="font-size:0.84rem; color:var(--text-muted); font-weight:600;">${sess.startTime || ''} · ${summaryText}</span>
+            <span style="font-size:0.82rem; color:var(--text-muted); font-weight:600;">${sess.startTime || ''} · ${summaryText}</span>
           </div>
-          <span style="font-size:0.8rem; color:var(--text-muted);">${sess.collapsed ? 'Toca para abrir' : 'Replegar'}</span>
+          <span style="font-size:0.78rem; color:var(--text-muted);">${sess.collapsed ? 'Abrir' : 'Cerrar'}</span>
         </div>
         ${bodyHtml}
       </div>
