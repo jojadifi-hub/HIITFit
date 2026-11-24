@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <meta name="theme-color" content="#16a34a">
 <title>HIITFit - Control Integral Oposición</title>
+  <link rel="manifest" href="./manifest.json">
 
 <!-- Tipografía Profesional Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -3856,6 +3857,13 @@ function importFullBackup(event) {
   };
   reader.readAsText(file);
 }
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js');
+    });
+  }
 </script>
 </body>
 </html>
