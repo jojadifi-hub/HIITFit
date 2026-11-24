@@ -26,7 +26,7 @@
     --card-bg: #ffffff;
     --card-hover: #f1f5f9;
     --card-secondary: #f2f6f4;
-    --header-bg: rgba(255, 255, 255, 0.9);
+    --header-bg: rgba(255, 255, 255, 0.94);
     --primary: #16a34a;
     --primary-hover: #15803d;
     --primary-soft: rgba(22, 163, 74, 0.11);
@@ -37,7 +37,7 @@
     --warning: #f59e0b;
     --info: #2563eb;
     --border: rgba(15, 23, 42, 0.08);
-    --shadow-card: 0 8px 24px -8px rgba(15, 23, 42, 0.07);
+    --shadow-card: 0 6px 18px -6px rgba(15, 23, 42, 0.07);
   }
 
   html.dark {
@@ -46,7 +46,7 @@
     --card-bg: #111824;
     --card-hover: #182234;
     --card-secondary: #192334;
-    --header-bg: rgba(17, 24, 36, 0.9);
+    --header-bg: rgba(17, 24, 36, 0.94);
     --primary: #22c55e;
     --primary-hover: #16a34a;
     --primary-soft: rgba(34, 197, 94, 0.15);
@@ -57,7 +57,7 @@
     --warning: #f59e0b;
     --info: #38bdf8;
     --border: rgba(255, 255, 255, 0.08);
-    --shadow-card: 0 12px 28px -8px rgba(0, 0, 0, 0.52);
+    --shadow-card: 0 10px 24px -8px rgba(0, 0, 0, 0.52);
   }
 
   *, *::before, *::after { box-sizing: border-box; }
@@ -74,59 +74,120 @@
     background-image: var(--bg-gradient);
     background-attachment: fixed;
     color: var(--text-main);
-    margin: 0; padding: 0 0 78px 0;
+    margin: 0; padding: 0 0 68px 0;
     display: flex; flex-direction: column; min-height: 100vh;
     -webkit-tap-highlight-color: transparent;
     font-variant-numeric: tabular-nums;
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
+  /* ==================== CABECERA SUPERIOR LIMPIA ==================== */
   header {
     background-color: var(--header-bg);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    padding: 0.65rem 0.85rem;
+    padding: 0.48rem 0.75rem;
     border-bottom: 1px solid var(--border);
     display: flex; justify-content: space-between; align-items: center;
     gap: 0.35rem;
     position: sticky; top: 0; z-index: 50;
   }
 
+  .header-pill-btn {
+    background: var(--card-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    height: 32px;
+    padding: 0 0.62rem;
+    border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 0.82rem; font-weight: 700;
+    transition: transform 0.12s ease, border-color 0.15s ease;
+  }
+  .header-pill-btn:hover { border-color: var(--primary); }
+  .header-pill-btn:active { transform: scale(0.95); }
+
+  .header-logout-btn {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff; border: none;
+    height: 32px; padding: 0 0.72rem;
+    border-radius: 999px;
+    font-family: inherit; font-size: 0.78rem; font-weight: 700;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    white-space: nowrap;
+  }
+  .header-logout-btn:active { transform: scale(0.95); }
+
+  /* Píldora de estado sin circulito: solo palabra + fondo teñido */
+  .readiness-badge {
+    padding: 0.26rem 0.68rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 800;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .readiness-optimo {
+    background: rgba(22, 163, 74, 0.16);
+    color: #15803d;
+  }
+  html.dark .readiness-optimo {
+    background: rgba(34, 197, 94, 0.22);
+    color: #4ade80;
+  }
+  .readiness-moderada {
+    background: rgba(245, 158, 11, 0.18);
+    color: #b45309;
+  }
+  html.dark .readiness-moderada {
+    background: rgba(245, 158, 11, 0.24);
+    color: #fbbf24;
+  }
+  .readiness-fatiga {
+    background: rgba(239, 68, 68, 0.16);
+    color: #b91c1c;
+  }
+  html.dark .readiness-fatiga {
+    background: rgba(239, 68, 68, 0.24);
+    color: #f87171;
+  }
+
   h1, h2, h3, h4 { margin: 0; font-weight: 800; letter-spacing: -0.025em; }
 
   .container {
-    padding: 0.75rem 0.85rem; max-width: 860px; margin: 0 auto; width: 100%;
+    padding: 0.55rem 0.75rem; max-width: 860px; margin: 0 auto; width: 100%;
     flex: 1;
   }
 
   .container > div:not(.hidden) {
-    animation: fadeIn 0.2s ease-out forwards;
+    animation: fadeIn 0.18s ease-out forwards;
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
+    from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
   .card {
     background-color: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 18px; padding: 1.05rem; margin-bottom: 0.85rem;
+    border-radius: 16px; padding: 0.95rem; margin-bottom: 0.75rem;
     box-shadow: var(--shadow-card);
   }
 
   .card-hero {
-    background: linear-gradient(150deg, var(--card-bg) 58%, var(--primary-soft) 100%);
+    background: linear-gradient(155deg, var(--card-bg) 62%, var(--primary-soft) 100%);
   }
 
   .btn {
     background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     color: white; border: none;
-    padding: 0.78rem 1.05rem; border-radius: 12px; font-weight: 700;
+    padding: 0.74rem 1rem; border-radius: 12px; font-weight: 700;
     cursor: pointer; width: 100%; margin-top: 0.35rem;
     transition: transform 0.12s ease, opacity 0.15s ease;
     display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
-    font-size: 0.92rem; font-family: inherit;
+    font-size: 0.9rem; font-family: inherit;
     box-shadow: 0 5px 14px -4px rgba(22, 163, 74, 0.35);
   }
   .btn:hover { opacity: 0.94; }
@@ -138,68 +199,150 @@
   .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; box-shadow: none; }
   .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: none; }
   .btn-info { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; box-shadow: none; }
-  .btn-sm { padding: 0.42rem 0.7rem; font-size: 0.8rem; width: auto; margin-top: 0; border-radius: 10px; }
+  .btn-sm { padding: 0.4rem 0.68rem; font-size: 0.79rem; width: auto; margin-top: 0; border-radius: 10px; }
 
-  /* ==================== SELECTOR DE FECHA FINO Y COMPACTO ==================== */
+  /* ==================== SELECTOR DE FECHA FINO (AYER / FECHA / MAÑANA) ==================== */
   .date-pill-bar {
     background-color: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 0.38rem 0.55rem;
-    margin-bottom: 0.75rem;
+    border-radius: 13px;
+    padding: 0.28rem 0.45rem;
+    margin-bottom: 0.52rem;
     display: flex; align-items: center; justify-content: space-between;
+    gap: 0.25rem;
     box-shadow: var(--shadow-card);
   }
-  .date-nav-arrow {
+  .date-nav-pill {
     background: var(--card-secondary); border: 1px solid var(--border);
-    color: var(--text-main); border-radius: 10px;
-    width: 34px; height: 34px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 0.85rem;
+    color: var(--text-main); border-radius: 9px;
+    padding: 0.28rem 0.55rem; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.25rem;
+    font-family: inherit; font-weight: 700; font-size: 0.76rem;
+    white-space: nowrap; flex-shrink: 0;
   }
-  .date-nav-arrow:active { transform: scale(0.94); }
+  .date-nav-pill:active { transform: scale(0.95); }
   .date-center-input {
     border: none !important; background: transparent !important;
-    margin: 0 !important; padding: 0.2rem 0.4rem !important;
-    width: auto !important; font-weight: 800 !important; font-size: 0.92rem !important;
+    margin: 0 !important; padding: 0.12rem 0.25rem !important;
+    width: auto !important; font-weight: 800 !important; font-size: 0.86rem !important;
     color: var(--text-main) !important; text-align: center;
   }
 
-  /* ==================== DOS TARJETAS GRANDES SIEMPRE EN 2 COLUMNAS ==================== */
-  .nav-grid-big {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; margin: 0.75rem 0;
+  /* ==================== HOME COMPACTO SIN SCROLL ==================== */
+  .home-macro-card {
+    padding: 0.62rem 0.78rem;
+    margin-bottom: 0.52rem;
   }
-  .big-nav-btn {
-    background: var(--card-bg);
-    border: 1px solid var(--border); padding: 1.05rem 0.75rem; border-radius: 18px;
-    text-align: center; cursor: pointer; position: relative;
-    transition: transform 0.15s ease, border-color 0.15s ease;
-    box-shadow: var(--shadow-card);
-  }
-  .big-nav-btn.nutri-card {
-    background: linear-gradient(155deg, var(--card-bg) 48%, rgba(22, 163, 74, 0.13) 100%);
-  }
-  .big-nav-btn.train-card {
-    background: linear-gradient(155deg, var(--card-bg) 48%, rgba(37, 99, 235, 0.12) 100%);
-  }
-  .big-nav-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
-  .big-nav-btn:active { transform: scale(0.98); }
-  .big-icon-pill {
-    width: 46px; height: 46px; border-radius: 14px;
-    display: inline-flex; align-items: center; justify-content: center;
-    font-size: 1.55rem; margin-bottom: 0.4rem;
+  .home-macro-mini-btn {
     background: var(--card-secondary); border: 1px solid var(--border);
+    color: var(--text-main); border-radius: 8px;
+    padding: 0.18rem 0.42rem; font-size: 0.72rem; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+  }
+  .home-macro-mini-btn:active { transform: scale(0.94); }
+
+  .home-mini-macros-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.45rem;
+    margin-top: 0.42rem;
+  }
+  .home-mini-macro-item {
+    text-align: center;
+    min-width: 0;
+  }
+  .home-mini-macro-label {
+    font-size: 0.67rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    margin-bottom: 0.2rem;
   }
 
-  .nav-grid-small { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 0.85rem; }
-  .small-nav-btn {
-    background: var(--card-bg);
-    border: 1px solid var(--border); padding: 0.78rem 0.65rem; border-radius: 14px;
-    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-    cursor: pointer; font-weight: 700; font-size: 0.84rem;
-    box-shadow: var(--shadow-card);
+  /* CUADRÍCULA 2x2 PRINCIPAL */
+  .home-grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.52rem;
+    margin-bottom: 0.52rem;
   }
-  .small-nav-btn:hover { border-color: var(--primary); }
+  .home-tile-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 0.68rem 0.5rem;
+    border-radius: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.14s ease, border-color 0.14s ease;
+    box-shadow: var(--shadow-card);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .home-tile-btn.tile-nutri {
+    background: linear-gradient(160deg, var(--card-bg) 52%, rgba(22, 163, 74, 0.11) 100%);
+  }
+  .home-tile-btn.tile-train {
+    background: linear-gradient(160deg, var(--card-bg) 52%, rgba(37, 99, 235, 0.11) 100%);
+  }
+  .home-tile-btn:hover { border-color: var(--primary); transform: translateY(-1px); }
+  .home-tile-btn:active { transform: scale(0.97); }
+  .home-tile-icon {
+    font-size: 1.55rem;
+    line-height: 1.1;
+    margin-bottom: 0.28rem;
+  }
+  .home-tile-title {
+    font-size: 0.96rem;
+    font-weight: 800;
+    margin: 0;
+  }
+  .home-tile-sub {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    line-height: 1.25;
+    margin: 0.18rem 0 0 0;
+  }
+
+  /* CARGA SEMANAL COMPACTA SIEMPRE EN 4 COLUMNAS */
+  .home-week-card {
+    padding: 0.62rem 0.75rem;
+    margin-bottom: 0.25rem;
+  }
+  .wk-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.32rem;
+  }
+  .wk-mini-box {
+    background: var(--card-secondary);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 0.42rem 0.22rem;
+    text-align: center;
+    min-width: 0;
+  }
+  .wk-mini-box span {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .wk-mini-box b {
+    font-size: 0.88rem;
+    display: block;
+    margin: 0.1rem 0;
+  }
+  .wk-mini-box small {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   /* ==================== BARRA INFERIOR DE ACCESOS RÁPIDOS ==================== */
   .bottom-dock {
@@ -209,25 +352,25 @@
     -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid var(--border);
     display: grid; grid-template-columns: repeat(5, 1fr);
-    padding: 0.35rem 0.25rem calc(0.35rem + env(safe-area-inset-bottom));
+    padding: 0.3rem 0.2rem calc(0.3rem + env(safe-area-inset-bottom));
     z-index: 80;
     box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.06);
   }
   .dock-btn {
     background: transparent; border: none; color: var(--text-muted);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 0.18rem; cursor: pointer; padding: 0.25rem 0.1rem;
-    font-family: inherit; font-size: 0.67rem; font-weight: 700;
+    gap: 0.15rem; cursor: pointer; padding: 0.2rem 0.1rem;
+    font-family: inherit; font-size: 0.66rem; font-weight: 700;
     transition: color 0.15s ease, transform 0.1s ease;
   }
-  .dock-btn i { font-size: 1.12rem; }
+  .dock-btn i { font-size: 1.05rem; }
   .dock-btn.active, .dock-btn:hover { color: var(--primary); }
   .dock-btn:active { transform: scale(0.93); }
   .dock-btn-center i {
     background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     color: #fff; width: 32px; height: 32px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.95rem; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35);
+    font-size: 0.92rem; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35);
   }
 
   select, input[type="text"], input[type="number"], input[type="date"], input[type="time"], input[type="month"], input[type="email"], input[type="password"], textarea {
@@ -240,8 +383,8 @@
 
   .hidden { display: none !important; }
   .badge {
-    background: var(--card-secondary); padding: 0.28rem 0.6rem;
-    border-radius: 999px; font-size: 0.76rem; border: 1px solid var(--border);
+    background: var(--card-secondary); padding: 0.25rem 0.55rem;
+    border-radius: 999px; font-size: 0.74rem; border: 1px solid var(--border);
   }
 
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
@@ -273,6 +416,8 @@
     background: var(--card-secondary); border-radius: 999px; height: 10px;
     width: 100%; overflow: hidden; border: 1px solid var(--border);
   }
+  .progress-track.sm { height: 5px; }
+  .progress-track.md { height: 8px; }
   .progress-track.lg { height: 13px; }
   .progress-fill {
     height: 100%; border-radius: 999px;
@@ -284,7 +429,7 @@
   .fill-fat  { background: linear-gradient(90deg, #d97706, #fbbf24); }
   .fill-over { background: linear-gradient(90deg, #dc2626, #ef4444) !important; }
 
-  /* ==================== TARJETAS DE TOMAS ESTILO APP MACROS (EN VERDE) ==================== */
+  /* ==================== TARJETAS DE TOMAS ==================== */
   .meal-slot-card {
     background: var(--card-bg); border: 1px solid var(--border);
     border-radius: 18px; padding: 0.95rem; margin-bottom: 0.8rem;
@@ -444,7 +589,7 @@
   }
 
   #rest-timer-widget {
-    position: fixed; bottom: 4.5rem; right: 0.85rem;
+    position: fixed; bottom: 4.3rem; right: 0.75rem;
     background: var(--card-bg); border: 2px solid var(--primary);
     border-radius: 15px; padding: 0.55rem 0.8rem;
     box-shadow: 0 12px 28px rgba(0,0,0,0.28); z-index: 90;
@@ -457,9 +602,9 @@
   }
 
   #toast-banner {
-    position: fixed; bottom: 4.6rem; left: 50%; transform: translateX(-50%);
-    background: #1e293b; color: #fff; padding: 0.68rem 1.15rem;
-    border-radius: 12px; font-size: 0.86rem; font-weight: 600;
+    position: fixed; bottom: 4.4rem; left: 50%; transform: translateX(-50%);
+    background: #1e293b; color: #fff; padding: 0.65rem 1.1rem;
+    border-radius: 12px; font-size: 0.84rem; font-weight: 600;
     z-index: 200; box-shadow: 0 10px 25px rgba(0,0,0,0.35);
     max-width: 90vw; text-align: center;
   }
@@ -468,26 +613,31 @@
 <body>
 
 <header>
-  <div style="display:flex; align-items:center; gap:0.4rem; min-width:0;">
-    <button id="btn-back" class="btn btn-secondary btn-sm hidden" onclick="showView('home')" title="Volver al inicio" style="padding:0.4rem 0.55rem;">
+  <!-- Izquierda: Volver + Logo HIITFit + Píldora de estado (solo palabra + fondo de color) -->
+  <div style="display:flex; align-items:center; gap:0.42rem; min-width:0;">
+    <button id="btn-back" class="header-pill-btn hidden" onclick="showView('home')" title="Volver al inicio" style="padding:0 0.55rem;">
       <i class="fa-solid fa-arrow-left"></i>
     </button>
-    <div onclick="handleLogoNavigation()" style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
-      <div style="background:linear-gradient(135deg, var(--primary), var(--primary-hover)); color:white; padding:0.36rem 0.52rem; border-radius:10px;">
+    <div onclick="handleLogoNavigation()" style="display:flex; align-items:center; gap:0.38rem; cursor:pointer; flex-shrink:0;">
+      <div style="background:linear-gradient(135deg, var(--primary), var(--primary-hover)); color:white; width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:0.88rem;">
         <i class="fa-solid fa-fire-flame-curved"></i>
       </div>
-      <h2 style="font-size:1.1rem;">HIITFit</h2>
+      <h2 style="font-size:1.05rem;">HIITFit</h2>
     </div>
+    <span id="readiness-pill" class="readiness-badge readiness-optimo" onclick="showView('estado')" style="cursor:pointer;" title="Ver estado y recuperación">Óptimo</span>
   </div>
 
-  <div style="display:flex; align-items:center; gap:0.35rem; flex-shrink:0;">
-    <span class="badge" id="readiness-pill" style="font-weight:700; font-size:0.74rem;">🟢 Óptimo</span>
-    <button class="btn btn-secondary btn-sm" onclick="toggleTheme()" title="Tema Día/Noche" style="padding:0.4rem 0.55rem;">
+  <!-- Derecha: Tema + Icono de Usuario + Salir -->
+  <div style="display:flex; align-items:center; gap:0.34rem; flex-shrink:0;">
+    <button class="header-pill-btn" onclick="toggleTheme()" title="Tema Día/Noche" style="width:32px; padding:0;">
       <i class="fa-solid fa-moon" id="theme-icon"></i>
     </button>
-    <div id="header-user-info" class="hidden" style="display:flex; align-items:center; gap:0.35rem;">
-      <button class="btn btn-danger btn-sm" onclick="logoutUser()" title="Cerrar sesión" style="padding:0.4rem 0.58rem;">
-        <i class="fa-solid fa-right-from-bracket"></i>
+    <div id="header-user-info" class="hidden" style="display:flex; align-items:center; gap:0.34rem;">
+      <button class="header-pill-btn" onclick="openOnboardingEdit()" title="Mi Perfil y Objetivos" style="width:32px; padding:0;">
+        <i class="fa-solid fa-user"></i>
+      </button>
+      <button class="header-logout-btn" onclick="logoutUser()" title="Cerrar sesión">
+        Salir
       </button>
     </div>
   </div>
@@ -634,95 +784,95 @@
 
     <!-- Barra Compacta de Fecha Activa -->
     <div class="date-pill-bar">
-      <button class="date-nav-arrow" onclick="changeDate(-1)" title="Día anterior">◀</button>
-      <div style="display:flex; align-items:center; gap:0.35rem;">
-        <i class="fa-regular fa-calendar" style="color:var(--primary); font-size:0.95rem;"></i>
+      <button class="date-nav-pill" onclick="changeDate(-1)" title="Día anterior">◀ Ayer</button>
+      <div style="display:flex; align-items:center; gap:0.25rem;">
+        <i class="fa-regular fa-calendar" style="color:var(--primary); font-size:0.88rem;"></i>
         <input type="date" id="active-date" class="date-center-input" onchange="onDateChanged()">
       </div>
-      <button class="date-nav-arrow" onclick="changeDate(1)" title="Día siguiente">▶</button>
+      <button class="date-nav-pill" onclick="changeDate(1)" title="Día siguiente">Mañana ▶</button>
     </div>
 
-    <!-- ==================== 1. PANTALLA PRINCIPAL (HOME) ==================== -->
+    <!-- ==================== 1. PANTALLA PRINCIPAL COMPACTA (SIN SCROLL) ==================== -->
     <div id="subview-home">
 
-      <!-- BALANCE NUTRICIONAL VISUAL -->
-      <div class="card card-hero">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem; flex-wrap:wrap; gap:0.35rem;">
-          <h3 style="font-size:1.05rem;">🥗 Balance Nutricional de Hoy</h3>
-          <div style="display:flex; align-items:center; gap:0.35rem;">
-            <span class="badge" id="home-kcal-pct" style="font-weight:800;">0%</span>
-            <button class="btn btn-secondary btn-sm" onclick="openWatchModal()" title="Sumar kcal del reloj hoy">⌚ +Reloj</button>
-            <button class="btn btn-secondary btn-sm" onclick="openOnboardingEdit()" title="Personalizar objetivo">🎯</button>
+      <!-- BALANCE NUTRICIONAL COMPACTO -->
+      <div class="card card-hero home-macro-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:0.35rem;">
+          <h3 style="font-size:0.96rem;">🥗 Balance Nutricional de Hoy</h3>
+          <div style="display:flex; align-items:center; gap:0.28rem;">
+            <button class="home-macro-mini-btn" onclick="openWatchModal()" title="Sumar kcal del reloj hoy">⌚ +Reloj</button>
+            <button class="home-macro-mini-btn" onclick="openOnboardingEdit()" title="Personalizar objetivo">🎯</button>
           </div>
         </div>
-        <div id="home-watch-note" style="font-size:0.76rem; color:var(--primary); font-weight:700; margin-bottom:0.6rem;"></div>
-        <div id="home-macro-bars-container"></div>
+
+        <div id="home-kcal-line" style="text-align:center; font-size:0.84rem; font-weight:800; margin:0.26rem 0 0.22rem 0;">
+          0 / 2035 kcal
+        </div>
+        <div class="progress-track md">
+          <div id="home-kcal-fill" class="progress-fill fill-kcal" style="width:0%;"></div>
+        </div>
+
+        <div id="home-mini-macros-grid" class="home-mini-macros-grid"></div>
       </div>
 
-      <!-- DOS PESTAÑAS GRANDES LADO A LADO (NUTRICIÓN Y ENTRENAMIENTO) -->
-      <div class="nav-grid-big">
-        <div class="big-nav-btn nutri-card" onclick="showView('nutricion')">
-          <div class="big-icon-pill">🥗</div>
-          <h3 style="font-size:1.12rem;">Nutrición</h3>
-          <p style="color:var(--text-muted); font-size:0.77rem; margin:0.28rem 0 0 0;" id="home-nutri-sub">
-            Comidas, foto tabla y recetas
-          </p>
+      <!-- CUADRÍCULA 2x2 CON TODOS LOS ICONOS PRINCIPALES -->
+      <div class="home-grid-2x2">
+        <div class="home-tile-btn tile-nutri" onclick="showView('nutricion')">
+          <div class="home-tile-icon">🥗</div>
+          <h3 class="home-tile-title">Nutrición</h3>
+          <p class="home-tile-sub" id="home-nutri-sub">Registrar comidas, fotos y recetas</p>
         </div>
 
-        <div class="big-nav-btn train-card" onclick="showView('entreno')">
-          <div class="big-icon-pill">🏋️</div>
-          <h3 style="font-size:1.12rem;">Entrenamiento</h3>
-          <p style="color:var(--text-muted); font-size:0.77rem; margin:0.28rem 0 0 0;" id="home-entreno-sub">
-            0 sesiones hoy
-          </p>
-        </div>
-      </div>
-
-      <!-- ACCESOS DIRECTOS ESTADO Y AJUSTES -->
-      <div class="nav-grid-small">
-        <div class="small-nav-btn" onclick="showView('estado')">
-          <span style="font-size:1.2rem;">🩺</span>
-          <span>Estado y Gasto</span>
+        <div class="home-tile-btn tile-train" onclick="showView('entreno')">
+          <div class="home-tile-icon">🏋️</div>
+          <h3 class="home-tile-title">Entrenamiento</h3>
+          <p class="home-tile-sub" id="home-entreno-sub">Fuerza, pista, piscina, circuito</p>
         </div>
 
-        <div class="small-nav-btn" onclick="showView('ajustes')">
-          <span style="font-size:1.2rem;">⚙️</span>
-          <span>Ajustes y Excel</span>
+        <div class="home-tile-btn" onclick="showView('estado')">
+          <div class="home-tile-icon">🩺</div>
+          <h3 class="home-tile-title">Estado y Gasto</h3>
+          <p class="home-tile-sub">Peso, sueño, fatiga y dolor</p>
+        </div>
+
+        <div class="home-tile-btn" onclick="showView('ajustes')">
+          <div class="home-tile-icon">⚙️</div>
+          <h3 class="home-tile-title">Ajustes</h3>
+          <p class="home-tile-sub">Perfil, exportar Excel y gráficas</p>
         </div>
       </div>
 
-      <!-- RESUMEN SEMANAL DE CARGA -->
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.4rem;">
-          <h3 style="font-size:1rem;">📈 Carga Real de la Semana</h3>
-          <span class="badge" id="home-week-range">Lun - Dom</span>
+      <!-- RESUMEN SEMANAL DE CARGA COMPACTO -->
+      <div class="card home-week-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.42rem; gap:0.35rem;">
+          <h3 style="font-size:0.94rem;">📈 Carga Semanal</h3>
+          <span style="font-size:0.72rem; color:var(--text-muted); font-weight:700;" id="home-week-range">Lun - Dom</span>
         </div>
 
-        <div class="grid-4">
-          <div class="metric-box">
+        <div class="wk-grid-4">
+          <div class="wk-mini-box">
             <span>Tonelaje</span>
             <b id="wk-tonnage">0 kg</b>
-            <span id="wk-tonnage-diff" style="font-size:0.7rem;">--</span>
+            <small id="wk-tonnage-diff">--</small>
           </div>
-          <div class="metric-box">
-            <span>Carga sRPE</span>
+          <div class="wk-mini-box">
+            <span>sRPE</span>
             <b id="wk-srpe">0 UA</b>
-            <span id="wk-sessions-count" style="font-size:0.7rem;">0 completadas</span>
+            <small id="wk-sessions-count">(0 compl.)</small>
           </div>
-          <div class="metric-box">
+          <div class="wk-mini-box">
             <span>Ratio ACWR</span>
             <b id="wk-acwr">1.00</b>
-            <span id="wk-acwr-status" style="font-size:0.7rem;">Zona óptima</span>
+            <small id="wk-acwr-status">Óptimo</small>
           </div>
-          <div class="metric-box">
-            <span>Peso Tendencia</span>
+          <div class="wk-mini-box">
+            <span>Peso Tend.</span>
             <b id="wk-trend-weight">-- kg</b>
-            <span id="wk-avg-kcal" style="font-size:0.7rem;">Media: 0 kcal</span>
+            <small id="wk-avg-kcal">0 kcal</small>
           </div>
         </div>
-
-        <div id="wk-muscle-volume-box" style="margin-top:0.75rem; padding-top:0.65rem; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; gap:0.38rem;"></div>
       </div>
+
     </div>
 
     <!-- ==================== 2. VISTA ESTADO Y GASTO DIARIO VISUAL ==================== -->
@@ -890,7 +1040,7 @@
         ⚡ <b>Hoy tienes Doble Sesión completada:</b> Recuerda sumar las calorías de ambas sesiones en <i>⌚ +Reloj</i> para que tu objetivo suba acorde.
       </div>
 
-      <!-- BALANCE NUTRICIONAL CON BARRAS DE COLORES Y BOTÓN GASTO RELOJ -->
+      <!-- BALANCE NUTRICIONAL DETALLADO CON BARRAS DE COLORES -->
       <div class="card card-hero">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem; flex-wrap:wrap; gap:0.35rem;">
           <h3 style="font-size:1.05rem;">🥗 Balance Nutricional</h3>
@@ -1924,11 +2074,20 @@ async function onDateChanged() {
 
 function updateReadinessPill(r) {
   const pill = document.getElementById('readiness-pill');
+  if (!pill) return;
   const maxPain = Math.max(r.painAdductor || 0, r.painShoulder || 0, r.painElbow || 0);
   const score = (r.suenoQ || 4) - (r.estres || 2) - (r.fatiga || 2) - (maxPain >= 4 ? 2 : 0);
-  if (score >= 0) pill.innerText = '🟢 Óptimo';
-  else if (score >= -3) pill.innerText = '🟡 Carga Moderada';
-  else pill.innerText = '🔴 Fatiga Alta';
+  pill.classList.remove('readiness-optimo', 'readiness-moderada', 'readiness-fatiga');
+  if (score >= 0) {
+    pill.innerText = 'Óptimo';
+    pill.classList.add('readiness-optimo');
+  } else if (score >= -3) {
+    pill.innerText = 'Carga Moderada';
+    pill.classList.add('readiness-moderada');
+  } else {
+    pill.innerText = 'Fatiga Alta';
+    pill.classList.add('readiness-fatiga');
+  }
 }
 
 // ==================== GENERADOR DE BARRAS DE MACROS CON ALERTA ROJA ====================
@@ -2013,7 +2172,6 @@ function computeWeekMetrics(weekDates) {
   let sessionCount = 0;
   let kcalSum = 0;
   let kcalDays = 0;
-  const muscleSets = {};
 
   weekDates.forEach(dk => {
     const day = fitDB.days[dk];
@@ -2025,13 +2183,8 @@ function computeWeekMetrics(weekDates) {
       srpeLoad += (sess.duration || 0) * (sess.srpe || 0);
       if (sess.exercises) {
         sess.exercises.forEach(ex => {
-          const exDef = (fitDB.customExercises || []).find(c => c.es.toLowerCase() === ex.name.toLowerCase());
-          const muscle = exDef ? exDef.muscle : 'General';
           (ex.sets || []).forEach(s => {
             tonnage += (s.kg || 0) * (s.reps || 0);
-            if ((s.rir === undefined || s.rir <= 3) && (s.reps > 0 || s.kg > 0)) {
-              muscleSets[muscle] = (muscleSets[muscle] || 0) + 1;
-            }
           });
         });
       }
@@ -2044,7 +2197,7 @@ function computeWeekMetrics(weekDates) {
     }
   });
 
-  return { tonnage, srpeLoad, sessionCount, avgKcal: kcalDays > 0 ? Math.round(kcalSum / kcalDays) : 0, muscleSets };
+  return { tonnage, srpeLoad, sessionCount, avgKcal: kcalDays > 0 ? Math.round(kcalSum / kcalDays) : 0 };
 }
 
 function getWatchSummaryLine(day) {
@@ -2066,34 +2219,71 @@ function renderHomeSummary() {
   const entries = day.nutrition.entries || [];
   const targets = getDailyTargets(day);
 
-  const totKcal = entries.reduce((a, b) => a + b.kcal, 0);
-  const totP = entries.reduce((a, b) => a + b.p, 0);
-  const totC = entries.reduce((a, b) => a + b.c, 0);
-  const totG = entries.reduce((a, b) => a + b.g, 0);
+  const totKcal = Math.round(entries.reduce((a, b) => a + b.kcal, 0));
+  const totP = +entries.reduce((a, b) => a + b.p, 0).toFixed(1);
+  const totC = +entries.reduce((a, b) => a + b.c, 0).toFixed(1);
+  const totG = +entries.reduce((a, b) => a + b.g, 0).toFixed(1);
 
-  const pct = Math.round((totKcal / Math.max(1, targets.targetKcal)) * 100);
-  const pctBadge = document.getElementById('home-kcal-pct');
-  pctBadge.innerText = `${pct}%`;
-  pctBadge.style.color = totKcal > targets.targetKcal ? 'var(--error)' : 'var(--primary)';
+  // Línea superior calorías + barra
+  const kcalOver = totKcal > targets.targetKcal;
+  const kcalPct = Math.min(100, Math.round((totKcal / Math.max(1, targets.targetKcal)) * 100));
+  const kcalLine = document.getElementById('home-kcal-line');
+  const kcalFill = document.getElementById('home-kcal-fill');
+  if (kcalLine) {
+    kcalLine.style.color = kcalOver ? 'var(--error)' : 'var(--text-main)';
+    kcalLine.innerText = `${totKcal} / ${targets.targetKcal} kcal`;
+  }
+  if (kcalFill) {
+    kcalFill.style.width = `${kcalPct}%`;
+    kcalFill.className = `progress-fill ${kcalOver ? 'fill-over' : 'fill-kcal'}`;
+  }
 
-  document.getElementById('home-watch-note').innerText = getWatchSummaryLine(day);
-  document.getElementById('home-macro-bars-container').innerHTML = buildMacroBarsHTML(totKcal, totP, totC, totG, targets);
+  // 3 mini barras de macros en fila
+  const miniGrid = document.getElementById('home-mini-macros-grid');
+  if (miniGrid) {
+    const miniItems = [
+      { label: `🥩 Prot: ${totP} / ${targets.targetP} g`, cur: totP, max: targets.targetP, cls: 'fill-prot' },
+      { label: `🍚 Carb: ${totC} / ${targets.targetC} g`, cur: totC, max: targets.targetC, cls: 'fill-carb' },
+      { label: `🥑 Grasas: ${totG} / ${targets.targetG} g`, cur: totG, max: targets.targetG, cls: 'fill-fat' }
+    ];
+    miniGrid.innerHTML = miniItems.map(m => {
+      const over = m.cur > m.max;
+      const pct = Math.min(100, Math.round((m.cur / Math.max(1, m.max)) * 100));
+      return `
+        <div class="home-mini-macro-item">
+          <span class="home-mini-macro-label" style="color:${over ? 'var(--error)' : 'var(--text-main)'};">${m.label}</span>
+          <div class="progress-track sm">
+            <div class="progress-fill ${over ? 'fill-over' : m.cls}" style="width:${pct}%;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
 
-  document.getElementById('home-nutri-sub').innerText = `${entries.length} registros · ${Math.round(totKcal)} kcal`;
+  const nutriSub = document.getElementById('home-nutri-sub');
+  if (nutriSub) {
+    nutriSub.innerText = entries.length > 0
+      ? `${entries.length} registros · ${totKcal} kcal`
+      : 'Registrar comidas, fotos y recetas';
+  }
 
   const allS = day.sessions || [];
   const plannedCount = allS.filter(s => s.status === 'planned').length;
   const compCount = allS.filter(s => s.status !== 'planned').length;
-  document.getElementById('home-entreno-sub').innerText = allS.length > 0
-    ? `${compCount} hechas · ${plannedCount} planificadas`
-    : 'Sin sesiones hoy';
+  const entrenoSub = document.getElementById('home-entreno-sub');
+  if (entrenoSub) {
+    entrenoSub.innerText = allS.length > 0
+      ? `${compCount} hechas · ${plannedCount} planificadas`
+      : 'Fuerza, pista, piscina, circuito';
+  }
 
   const thisWeek = getWeekDates(activeDate);
   const prevMon = new Date(thisWeek[0]);
   prevMon.setDate(prevMon.getDate() - 7);
   const prevWeek = getWeekDates(prevMon.toISOString().slice(0, 10));
 
-  document.getElementById('home-week-range').innerText = `${thisWeek[0].slice(5)} al ${thisWeek[6].slice(5)}`;
+  const wkRange = document.getElementById('home-week-range');
+  if (wkRange) wkRange.innerText = `Lun - Dom (${thisWeek[0].slice(5)} al ${thisWeek[6].slice(5)})`;
 
   const cur = computeWeekMetrics(thisWeek);
   const prev = computeWeekMetrics(prevWeek);
@@ -2101,13 +2291,13 @@ function renderHomeSummary() {
   document.getElementById('wk-tonnage').innerText = `${cur.tonnage.toLocaleString('es-ES')} kg`;
   if (prev.tonnage > 0) {
     const diffPct = Math.round(((cur.tonnage - prev.tonnage) / prev.tonnage) * 100);
-    document.getElementById('wk-tonnage-diff').innerText = `${diffPct >= 0 ? '+' : ''}${diffPct}% vs sem. ant.`;
+    document.getElementById('wk-tonnage-diff').innerText = `${diffPct >= 0 ? '+' : ''}${diffPct}% vs ant.`;
   } else {
-    document.getElementById('wk-tonnage-diff').innerText = 'Sin ref. previa';
+    document.getElementById('wk-tonnage-diff').innerText = '--';
   }
 
   document.getElementById('wk-srpe').innerText = `${cur.srpeLoad} UA`;
-  document.getElementById('wk-sessions-count').innerText = `${cur.sessionCount} completadas`;
+  document.getElementById('wk-sessions-count').innerText = `(${cur.sessionCount} compl.)`;
 
   let chronicSum = 0;
   for (let w = 1; w <= 3; w++) {
@@ -2118,17 +2308,11 @@ function renderHomeSummary() {
   const chronicAvg = chronicSum / 3;
   const acwr = chronicAvg > 0 ? (cur.srpeLoad / chronicAvg) : 1.0;
   document.getElementById('wk-acwr').innerText = acwr.toFixed(2);
-  document.getElementById('wk-acwr-status').innerText = acwr > 1.35 ? '⚠️ Pico carga' : (acwr < 0.8 ? 'Descarga' : 'Zona óptima');
+  document.getElementById('wk-acwr-status').innerText = acwr > 1.35 ? '⚠️ Pico' : (acwr < 0.8 ? 'Descarga' : 'Óptimo');
 
   const trendW = computeTrendWeight(activeDate);
   document.getElementById('wk-trend-weight').innerText = trendW ? `${trendW.toFixed(1)} kg` : '-- kg';
-  document.getElementById('wk-avg-kcal').innerText = `Media: ${cur.avgKcal} kcal`;
-
-  const mBox = document.getElementById('wk-muscle-volume-box');
-  const mKeys = Object.keys(cur.muscleSets);
-  mBox.innerHTML = mKeys.length === 0
-    ? `<span style="font-size:0.76rem; color:var(--text-muted);">Series efectivas semanales por grupo muscular aparecerán aquí al completar fuerza.</span>`
-    : mKeys.map(m => `<span class="badge" style="font-size:0.74rem;"><b>${m}:</b> ${cur.muscleSets[m]} series</span>`).join('');
+  document.getElementById('wk-avg-kcal').innerText = `${cur.avgKcal} kcal/d`;
 }
 
 // ==================== CÁLCULO ENERGÉTICO ADITIVO / MODO NUTRICIONISTA ====================
@@ -2508,7 +2692,6 @@ async function searchOnlineFoods() {
   const usdaItems = usdaRes.status === 'fulfilled' ? usdaRes.value : [];
   const offItems = offRes.status === 'fulfilled' ? offRes.value : [];
 
-  // Intercalamos productos españoles (OFF) y valores exactos USDA
   const combined = [];
   const maxLen = Math.max(usdaItems.length, offItems.length);
   for (let i = 0; i < maxLen; i++) {
@@ -2580,7 +2763,7 @@ async function addFoodEntry(saveToLibrary) {
   const day = ensureDayRecord(dateKey);
 
   if (selectedIsRecipe) {
-    const mult = amount; // 1 = receta entera, 1.5 = x1.5, etc.
+    const mult = amount;
     day.nutrition.entries.push({
       mealSlot,
       name,
@@ -2798,7 +2981,6 @@ function pickRecipeIngredient(key) {
   document.getElementById('rec-ing-search').value = food.name;
   document.getElementById('rec-search-results').classList.add('hidden');
 
-  // Paso 2: Mostrar y enfocar obligatoriamente los gramos
   document.getElementById('rec-selected-food-label').innerText = food.name;
   const gramsInp = document.getElementById('rec-ing-grams');
   gramsInp.value = '';
